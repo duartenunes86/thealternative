@@ -11,7 +11,8 @@ const config = {
 type Config = typeof config;
 
 export function getFirebaseConfig(): Config {
-  if (Object.values(config).some((value) => !value))
+  const { measurementId, ...required } = config;
+  if (Object.values(required).some((value) => !value))
     throw new Error('Firebase config is not set or incomplete');
 
   return config;
