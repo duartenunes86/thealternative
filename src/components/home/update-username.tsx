@@ -72,19 +72,19 @@ export function UpdateUsername(): JSX.Element {
 
     setLoading(true);
 
-    await sleep(500);
-
-    await updateUsername(user?.id as string, inputValue);
-
-    closeModal();
-
-    setLoading(false);
-
-    setInputValue('');
-    setVisited(false);
-    setAvailable(false);
-
-    toast.success('Username updated successfully');
+    try {
+      await sleep(500);
+      await updateUsername(user?.id as string, inputValue);
+      closeModal();
+      setInputValue('');
+      setVisited(false);
+      setAvailable(false);
+      toast.success('Username updated successfully');
+    } catch (error) {
+      toast.error('Failed to update username. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cancelUpdateUsername = (): void => {

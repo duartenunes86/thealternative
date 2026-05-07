@@ -56,7 +56,14 @@ export function AuthContextProvider({
     const manageUser = async (authUser: AuthUser): Promise<void> => {
       const { uid, displayName, photoURL } = authUser;
 
-      const userSnapshot = await getDoc(doc(usersCollection, uid));
+      let userSnapshot;
+      try {
+        userSnapshot = await getDoc(doc(usersCollection, uid));
+      } catch (error) {
+        setError(error as Error);
+        setLoading(false);
+        return;
+      }
 
       if (!userSnapshot.exists()) {
         let available = false;
