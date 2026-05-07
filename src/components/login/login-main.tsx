@@ -65,36 +65,6 @@ export function LoginMain(): JSX.Element {
             >
               Sign up with phone or email
             </Button>
-            <p
-              className='inner:custom-underline inner:custom-underline text-center text-xs
-                         text-light-secondary inner:text-accent-blue dark:text-dark-secondary'
-            >
-              By signing up, you agree to the{' '}
-              <a
-                href='https://twitter.com/tos'
-                target='_blank'
-                rel='noreferrer'
-              >
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a
-                href='https://twitter.com/privacy'
-                target='_blank'
-                rel='noreferrer'
-              >
-                Privacy Policy
-              </a>
-              , including{' '}
-              <a
-                href='https://help.twitter.com/rules-and-policies/twitter-cookies'
-                target='_blank'
-                rel='noreferrer'
-              >
-                Cookie Use
-              </a>
-              .
-            </p>
           </div>
           <div className='flex flex-col gap-3'>
             <p className='font-bold'>Already have an account? </p>
