@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { formatNumber } from '@lib/date';
 import { preventBubbling } from '@lib/utils';
 import { useTrends } from '@lib/api/trends';
-import { Error } from '@components/ui/error';
 import { HeroIcon } from '@components/ui/hero-icon';
 import { Button } from '@components/ui/button';
 import { ToolTip } from '@components/ui/tooltip';
@@ -91,9 +90,7 @@ export function AsideTrends({ inTrendsPage }: AsideTrendsProps): JSX.Element {
             </Link>
           )}
         </motion.div>
-      ) : (
-        <Error />
-      )}
+      ) : null}
     </section>
   );
 }
