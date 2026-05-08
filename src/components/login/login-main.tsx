@@ -20,6 +20,7 @@ export function LoginMain(): JSX.Element {
   return (
     <>
     <EmailAuthModal
+      key={modalMode}
       open={modalOpen}
       initialMode={modalMode}
       closeModal={() => setModalOpen(false)}
