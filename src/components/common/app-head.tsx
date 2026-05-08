@@ -5,6 +5,7 @@ export function AppHead(): JSX.Element {
     <Head>
       <title>The Alternative</title>
       <meta name='og:title' content='The Alternative' />
+      <link rel='icon' type='image/svg+xml' href='/favicon.svg' />
       <link rel='icon' href='/favicon.ico' />
       <link rel='manifest' href='/site.webmanifest' key='site-manifest' />
       <meta name='twitter:site' content='@ccrsxx' />
