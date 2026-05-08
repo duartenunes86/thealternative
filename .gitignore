@@ -38,3 +38,4 @@ next-env.d.ts
 # python
 /.mypy_cache
 *.py
+.firebase-deploy.sh
