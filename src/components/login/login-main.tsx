@@ -1,12 +1,29 @@
+import { useState } from 'react';
 import { useAuth } from '@lib/context/auth-context';
 import { NextImage } from '@components/ui/next-image';
 import { CustomIcon } from '@components/ui/custom-icon';
 import { Button } from '@components/ui/button';
+import { EmailAuthModal } from '@components/modal/email-auth-modal';
+
+type ModalMode = 'signup' | 'signin';
 
 export function LoginMain(): JSX.Element {
   const { signInWithGoogle } = useAuth();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>('signup');
+
+  const openModal = (mode: ModalMode): void => {
+    setModalMode(mode);
+    setModalOpen(true);
+  };
 
   return (
+    <>
+    <EmailAuthModal
+      open={modalOpen}
+      initialMode={modalMode}
+      closeModal={() => setModalOpen(false)}
+    />
     <main className='grid lg:grid-cols-[1fr,45vw]'>
       <div className='relative hidden items-center justify-center  lg:flex'>
         <NextImage
@@ -60,10 +77,11 @@ export function LoginMain(): JSX.Element {
               <i className='border-b border-light-border dark:border-dark-border' />
             </div>
             <Button
-              className='cursor-not-allowed bg-accent-blue text-white transition hover:brightness-90
+              className='bg-accent-blue text-white transition hover:brightness-90
                          focus-visible:!ring-accent-blue/80 focus-visible:brightness-90 active:brightness-75'
+              onClick={() => openModal('signup')}
             >
-              Sign up with phone or email
+              Sign up with email
             </Button>
           </div>
           <div className='flex flex-col gap-3'>
@@ -72,7 +90,7 @@ export function LoginMain(): JSX.Element {
               className='border border-light-line-reply font-bold text-accent-blue hover:bg-accent-blue/10
                          focus-visible:bg-accent-blue/10 focus-visible:!ring-accent-blue/80 active:bg-accent-blue/20
                          dark:border-light-secondary'
-              onClick={signInWithGoogle}
+              onClick={() => openModal('signin')}
             >
               Sign in
             </Button>
@@ -80,5 +98,6 @@ export function LoginMain(): JSX.Element {
         </div>
       </div>
     </main>
+    </>
   );
 }

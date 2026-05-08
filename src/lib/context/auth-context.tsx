@@ -3,7 +3,10 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
-  signOut as signOutFirebase
+  signOut as signOutFirebase,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import {
   doc,
@@ -36,6 +39,8 @@ type AuthContext = {
   userBookmarks: Bookmark[] | null;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signUpWithEmail: (name: string, email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContext | null>(null);
@@ -56,6 +61,14 @@ export function AuthContextProvider({
     const manageUser = async (authUser: AuthUser): Promise<void> => {
       const { uid, displayName, photoURL } = authUser;
 
+      // Email sign-up: updateProfile fires a second onAuthStateChanged with the real name.
+      // Skip this first event (displayName is null) to avoid creating the Firestore
+      // document before the name is available.
+      if (!displayName) {
+        setLoading(false);
+        return;
+      }
+
       let userSnapshot;
       try {
         userSnapshot = await getDoc(doc(usersCollection, uid));
@@ -73,7 +86,7 @@ export function AuthContextProvider({
           const normalizeName = displayName?.replace(/\s/g, '').toLowerCase();
           const randomInt = getRandomInt(1, 10_000);
 
-          randomUsername = `${normalizeName as string}${randomInt}`;
+          randomUsername = `${normalizeName}${randomInt}`;
 
           const isUsernameAvailable = await checkUsernameAvailability(
             randomUsername
@@ -85,7 +98,7 @@ export function AuthContextProvider({
         const userData: WithFieldValue<User> = {
           id: uid,
           bio: null,
-          name: displayName as string,
+          name: displayName,
           theme: null,
           accent: null,
           website: null,
@@ -174,6 +187,26 @@ export function AuthContextProvider({
     }
   };
 
+  const signUpWithEmail = async (
+    name: string,
+    email: string,
+    password: string
+  ): Promise<void> => {
+    const { user: authUser } = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    await updateProfile(authUser, { displayName: name });
+  };
+
+  const signInWithEmail = async (
+    email: string,
+    password: string
+  ): Promise<void> => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
+
   const signOut = async (): Promise<void> => {
     try {
       await signOutFirebase(auth);
@@ -193,7 +226,9 @@ export function AuthContextProvider({
     randomSeed,
     userBookmarks,
     signOut,
-    signInWithGoogle
+    signInWithGoogle,
+    signUpWithEmail,
+    signInWithEmail
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
