@@ -65,18 +65,6 @@ export function LoginMain(): JSX.Element {
               <CustomIcon iconName='GoogleIcon' /> Sign up with Google
             </Button>
             <Button
-              className='flex cursor-not-allowed justify-center gap-2 border border-light-line-reply font-bold text-light-primary
-                         transition hover:bg-[#e6e6e6] focus-visible:bg-[#e6e6e6] active:bg-[#cccccc] dark:border-0
-                         dark:bg-white dark:hover:brightness-90 dark:focus-visible:brightness-90 dark:active:brightness-75'
-            >
-              <CustomIcon iconName='AppleIcon' /> Sign up with Apple
-            </Button>
-            <div className='grid w-full grid-cols-[1fr,auto,1fr] items-center gap-2'>
-              <i className='border-b border-light-border dark:border-dark-border' />
-              <p>or</p>
-              <i className='border-b border-light-border dark:border-dark-border' />
-            </div>
-            <Button
               className='bg-accent-blue text-white transition hover:brightness-90
                          focus-visible:!ring-accent-blue/80 focus-visible:brightness-90 active:brightness-75'
               onClick={() => openModal('signup')}
