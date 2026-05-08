@@ -51,7 +51,7 @@ export function DisplayModal({ closeModal }: DisplayModalProps): JSX.Element {
               </div>
             </div>
             <p className='whitespace-pre-line break-words'>
-              At the heart of The Alternative are short messages called Tweets —
+              At the heart of The Alternative are short messages called Posts —
               just like this one — which can include photos, videos, links,
               text, hashtags, and mentions like{' '}
               <span className='text-main-accent'>@thealternative</span>.
