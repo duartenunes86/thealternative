@@ -1,4 +1,11 @@
-import { useState, useEffect, useContext, createContext, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  createContext,
+  useMemo
+} from 'react';
 import {
   signInWithPopup,
   GoogleAuthProvider,
@@ -57,93 +64,85 @@ export function AuthContextProvider({
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const manageUser = async (authUser: AuthUser): Promise<void> => {
-      const { uid, displayName, photoURL } = authUser;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const manageUser = useCallback(async (authUser: AuthUser): Promise<void> => {
+    const { uid, displayName, photoURL } = authUser;
 
-      // Email sign-up: updateProfile fires a second onAuthStateChanged with the real name.
-      // Skip this first event (displayName is null) to avoid creating the Firestore
-      // document before the name is available.
-      if (!displayName) {
-        setLoading(false);
-        return;
-      }
-
-      let userSnapshot;
-      try {
-        userSnapshot = await getDoc(doc(usersCollection, uid));
-      } catch (error) {
-        setError(error as Error);
-        setLoading(false);
-        return;
-      }
-
-      if (!userSnapshot.exists()) {
-        let available = false;
-        let randomUsername = '';
-
-        while (!available) {
-          const normalizeName = displayName?.replace(/\s/g, '').toLowerCase();
-          const randomInt = getRandomInt(1, 10_000);
-
-          randomUsername = `${normalizeName}${randomInt}`;
-
-          const isUsernameAvailable = await checkUsernameAvailability(
-            randomUsername
-          );
-
-          if (isUsernameAvailable) available = true;
-        }
-
-        const userData: WithFieldValue<User> = {
-          id: uid,
-          bio: null,
-          name: displayName,
-          theme: null,
-          accent: null,
-          website: null,
-          location: null,
-          photoURL: photoURL ?? '/assets/twitter-avatar.jpg',
-          username: randomUsername,
-          verified: false,
-          following: [],
-          followers: [],
-          createdAt: serverTimestamp(),
-          updatedAt: null,
-          totalTweets: 0,
-          totalPhotos: 0,
-          pinnedTweet: null,
-          coverPhotoURL: null
-        };
-
-        const userStatsData: WithFieldValue<Stats> = {
-          likes: [],
-          tweets: [],
-          updatedAt: null
-        };
-
-        try {
-          await Promise.all([
-            setDoc(doc(usersCollection, uid), userData),
-            setDoc(doc(userStatsCollection(uid), 'stats'), userStatsData)
-          ]);
-
-          const newUser = (await getDoc(doc(usersCollection, uid))).data();
-          setUser(newUser as User);
-        } catch (error) {
-          setError(error as Error);
-        }
-      } else {
-        const userData = userSnapshot.data();
-        setUser(userData);
-      }
-
+    if (!displayName) {
       setLoading(false);
-    };
+      return;
+    }
 
+    let userSnapshot;
+    try {
+      userSnapshot = await getDoc(doc(usersCollection, uid));
+    } catch (err) {
+      setError(err as Error);
+      setLoading(false);
+      return;
+    }
+
+    if (!userSnapshot.exists()) {
+      let available = false;
+      let randomUsername = '';
+
+      while (!available) {
+        const normalizeName = displayName.replace(/\s/g, '').toLowerCase();
+        const randomInt = getRandomInt(1, 10_000);
+        randomUsername = `${normalizeName}${randomInt}`;
+        const isUsernameAvailable = await checkUsernameAvailability(randomUsername);
+        if (isUsernameAvailable) available = true;
+      }
+
+      const userData: WithFieldValue<User> = {
+        id: uid,
+        bio: null,
+        name: displayName,
+        theme: null,
+        accent: null,
+        website: null,
+        location: null,
+        photoURL: photoURL ?? '/assets/twitter-avatar.jpg',
+        username: randomUsername,
+        verified: false,
+        following: [],
+        followers: [],
+        createdAt: serverTimestamp(),
+        updatedAt: null,
+        totalTweets: 0,
+        totalPhotos: 0,
+        pinnedTweet: null,
+        coverPhotoURL: null
+      };
+
+      const userStatsData: WithFieldValue<Stats> = {
+        likes: [],
+        tweets: [],
+        updatedAt: null
+      };
+
+      try {
+        await Promise.all([
+          setDoc(doc(usersCollection, uid), userData),
+          setDoc(doc(userStatsCollection(uid), 'stats'), userStatsData)
+        ]);
+
+        const newUser = (await getDoc(doc(usersCollection, uid))).data();
+        setUser(newUser as User);
+      } catch (err) {
+        setError(err as Error);
+      }
+    } else {
+      const userData = userSnapshot.data();
+      setUser(userData);
+    }
+
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     const handleUserAuth = (authUser: AuthUser | null): void => {
       setLoading(true);
-
       if (authUser) void manageUser(authUser);
       else {
         setUser(null);
@@ -151,8 +150,9 @@ export function AuthContextProvider({
       }
     };
 
-    onAuthStateChanged(auth, handleUserAuth);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, handleUserAuth);
+    return unsubscribe;
+  }, [manageUser]);
 
   useEffect(() => {
     if (!user) return;
@@ -182,8 +182,8 @@ export function AuthContextProvider({
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      setError(error as Error);
+    } catch (err) {
+      setError(err as Error);
     }
   };
 
@@ -198,6 +198,9 @@ export function AuthContextProvider({
       password
     );
     await updateProfile(authUser, { displayName: name });
+    // updateProfile does not trigger onAuthStateChanged, so call manageUser directly
+    // with the now-updated auth user (auth.currentUser has the refreshed profile).
+    await manageUser(auth.currentUser ?? authUser);
   };
 
   const signInWithEmail = async (
@@ -210,8 +213,8 @@ export function AuthContextProvider({
   const signOut = async (): Promise<void> => {
     try {
       await signOutFirebase(auth);
-    } catch (error) {
-      setError(error as Error);
+    } catch (err) {
+      setError(err as Error);
     }
   };
 
