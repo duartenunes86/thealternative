@@ -218,7 +218,8 @@ export function AuthContextProvider({
     }
   };
 
-  const isAdmin = user ? user.username === 'ccrsxx' : false;
+  const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
+  const isAdmin = user && adminUid ? user.id === adminUid : false;
   const randomSeed = useMemo(getRandomId, [user?.id]);
 
   const value: AuthContext = {

@@ -18,6 +18,12 @@ export default async function placeIdEndpoint(
 ): Promise<void> {
   const { id, limit } = req.query as PlaceIdEndpointQuery;
 
+  // Only allow numeric WOEID values — reject anything else
+  if (!/^\d+$/.test(id)) {
+    res.status(400).json({ errors: [{ code: 400, message: 'Invalid id parameter' }] });
+    return;
+  }
+
   const response = await fetch(
     `https://api.twitter.com/1.1/trends/place.json?id=${id}`,
     AUTH

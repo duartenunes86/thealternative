@@ -1,22 +1,27 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Update ADMIN_UID to your Firebase Auth UID
     function isAdmin() {
-      return request.auth.uid == 'Twt0A27bx9YcG4vu3RTsR7ifJzf2';
+      return request.auth.uid == 'REPLACE_WITH_YOUR_FIREBASE_UID';
     }
-    
+
     function isAuthorized(userId) {
       return request.auth != null && (userId == request.auth.uid || isAdmin());
     }
-  
+
     function isValidMedia() {
       return request.resource.contentType.matches('image/.*|video/.*')
              && request.resource.size < 50 * 1024 * 1024;
     }
 
+    function isValidFileName(fileName) {
+      return fileName.matches('[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|gif|webp|mp4|webm)');
+    }
+
     match /images/{userId}/{fileName} {
       allow read: if request.auth != null;
-      allow create: if isAuthorized(userId) && isValidMedia();
+      allow create: if isAuthorized(userId) && isValidMedia() && isValidFileName(fileName);
       allow update, delete: if false;
     }
   }

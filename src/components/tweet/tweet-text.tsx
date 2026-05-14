@@ -6,19 +6,21 @@ type TweetTextProps = {
 
 const URL_REGEX = /https?:\/\/[^\s]+/g;
 
+const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
+
 function extractYouTubeId(url: string): string | null {
   try {
     const u = new URL(url);
-    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
-    if (u.hostname.includes('youtube.com')) {
-      const v = u.searchParams.get('v');
-      if (v) return v;
-      if (u.pathname.startsWith('/shorts/')) return u.pathname.split('/')[2];
+    let id: string | null = null;
+    if (u.hostname === 'youtu.be') id = u.pathname.slice(1).split('?')[0];
+    else if (u.hostname.includes('youtube.com')) {
+      id = u.searchParams.get('v');
+      if (!id && u.pathname.startsWith('/shorts/')) id = u.pathname.split('/')[2];
     }
+    return id && YOUTUBE_ID_RE.test(id) ? id : null;
   } catch (_) {
     return null;
   }
-  return null;
 }
 
 type YoutubeEmbedProps = {
@@ -52,6 +54,7 @@ function YoutubeEmbed({ videoId, url }: YoutubeEmbedProps): JSX.Element {
         className='aspect-video w-full'
         allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
         allowFullScreen
+        sandbox='allow-scripts allow-same-origin allow-presentation'
         title={title ?? 'YouTube video'}
       />
     </div>
