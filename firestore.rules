@@ -1,9 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Update ADMIN_UID to your Firebase Auth UID (Firebase console → Authentication → Users)
     function isAdmin() {
-      return request.auth.uid == 'REPLACE_WITH_YOUR_FIREBASE_UID';
+      return request.auth.uid == 'he4x6yM1tVS6LZC9B2c7VlfyZog1'
+          || request.auth.uid == 'DiaHTyY0mybaE8LkCruJtweXsQA2';
     }
 
     function isAuthorized(userId) {
