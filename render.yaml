@@ -12,7 +12,7 @@ services:
       - key: NEXT_PUBLIC_URL
         value: https://thealternative.social
       - key: NEXT_PUBLIC_USE_EMULATOR
-        value: false
+        value: "false"
       - key: NEXT_PUBLIC_API_KEY
         value: AIzaSyBUfxktqhp2e9XC-KxRTQcAPUoim6rDiMU
       - key: NEXT_PUBLIC_AUTH_DOMAIN
@@ -28,3 +28,16 @@ services:
       # Web Push (VAPID) public key — safe to expose, it is sent to browsers
       - key: NEXT_PUBLIC_FCM_VAPID_KEY
         value: BOzOWBIYilfRtV8b6A3kZ4lIqn3JQMuIaIZB3L62BMxD3vTKFcUL2Pp3ylsK72JObNh8ecznxB3Or0jsWee5nZo
+      # --- server-side secrets: set these in the Render dashboard, never here ---
+      # Firebase service account JSON (one line). Powers /api/push/notify and
+      # /api/digest/*, which replace Cloud Functions so no Blaze plan is needed.
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      # Shared secret guarding /api/digest/run and signing unsubscribe links
+      - key: DIGEST_SECRET
+        sync: false
+      # Gmail address and app password used to send the digest
+      - key: EMAIL_API
+        sync: false
+      - key: EMAIL_API_PASSWORD
+        sync: false

@@ -16,7 +16,7 @@ import {
   getCountFromServer
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './app';
+import { db, auth, storage } from './app';
 import {
   usersCollection,
   tweetsCollection,
@@ -175,8 +175,34 @@ export async function addNotification({
 
   try {
     await setDoc(doc(userNotificationsCollection(targetUserId), id), data);
+    await triggerPush(targetUserId, id);
   } catch {
     // a failed notification must never break the action that triggered it
+  }
+}
+
+/**
+ * Asks the server to push this notification to the recipient's devices.
+ * Runs in Next rather than a Cloud Function so the project does not need a
+ * Firebase Blaze plan. Failures are ignored — the in-app notification is
+ * already written, push is a bonus.
+ */
+async function triggerPush(
+  targetUserId: string,
+  notificationId: string
+): Promise<void> {
+  try {
+    const idToken = await auth.currentUser?.getIdToken();
+
+    if (!idToken) return;
+
+    await fetch('/api/push/notify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken, targetUserId, notificationId })
+    });
+  } catch {
+    // offline, blocked, or push not configured — not worth surfacing
   }
 }
 
