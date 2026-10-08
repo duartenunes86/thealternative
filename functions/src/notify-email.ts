@@ -1,6 +1,7 @@
 import { createTransport } from 'nodemailer';
 import { firestore, functions, regionalFunctions } from './lib/utils';
 import { EMAIL_API, EMAIL_API_PASSWORD, TARGET_EMAIL } from './lib/env';
+import { SITE_URL } from './lib/constants';
 import type { Tweet, User } from './types';
 
 export const notifyEmail = regionalFunctions.firestore
@@ -24,7 +25,7 @@ export const notifyEmail = regionalFunctions.firestore
       }
     });
 
-    const tweetLink = `https://twitter-clone-ccrsxx.vercel.app/tweet/${snapshot.id}`;
+    const tweetLink = `${SITE_URL}/tweet/${snapshot.id}`;
 
     const emailHeader = `New Tweet${
       parent ? ' reply' : ''

@@ -9,7 +9,8 @@ import {
   manageReply,
   uploadImages,
   manageTotalTweets,
-  manageTotalPhotos
+  manageTotalPhotos,
+  addReplyNotification
 } from '@lib/firebase/utils';
 import { useAuth } from '@lib/context/auth-context';
 import { sleep } from '@lib/utils';
@@ -103,6 +104,9 @@ export function Input({
     ]);
 
     const { id: tweetId } = await getDoc(tweetRef);
+
+    if (isReplying && parent)
+      await addReplyNotification(parent.id, userId, tweetId);
 
     if (!modal && !replyModal) {
       discardTweet();

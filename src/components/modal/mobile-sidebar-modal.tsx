@@ -29,10 +29,9 @@ const topNavLinks: Readonly<MobileNavLink[]> = [
     iconName: 'BookmarkIcon'
   },
   {
-    href: '/lists',
-    linkName: 'Lists',
-    iconName: 'Bars3BottomLeftIcon',
-    disabled: true
+    href: '/notifications',
+    linkName: 'Notifications',
+    iconName: 'BellIcon'
   },
   {
     href: '/people',
@@ -41,20 +40,9 @@ const topNavLinks: Readonly<MobileNavLink[]> = [
   }
 ];
 
-const bottomNavLinks: Readonly<MobileNavLink[]> = [
-  {
-    href: '/settings',
-    linkName: 'Settings and privacy',
-    iconName: 'Cog8ToothIcon',
-    disabled: true
-  },
-  {
-    href: '/help-center',
-    linkName: 'Help center',
-    iconName: 'QuestionMarkCircleIcon',
-    disabled: true
-  }
-];
+// Settings and Help center are intentionally absent until those pages exist —
+// an inert nav entry reads as a broken app.
+const bottomNavLinks: Readonly<MobileNavLink[]> = [];
 
 type Stats = [string, string, number];
 

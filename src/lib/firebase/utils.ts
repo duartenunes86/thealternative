@@ -4,6 +4,7 @@ import {
   where,
   limit,
   setDoc,
+  getDoc,
   getDocs,
   updateDoc,
   deleteDoc,
@@ -20,10 +21,12 @@ import {
   usersCollection,
   tweetsCollection,
   userStatsCollection,
-  userBookmarksCollection
+  userBookmarksCollection,
+  userNotificationsCollection
 } from './collections';
 import type { WithFieldValue, Query } from 'firebase/firestore';
-import type { EditableUserData } from '@lib/types/user';
+import type { Notification, NotificationType } from '@lib/types/notification';
+import type { EditableUserData, EmailDigestFrequency } from '@lib/types/user';
 import type { FilesWithId, ImagesPreview } from '@lib/types/file';
 import type { Bookmark } from '@lib/types/bookmark';
 import type { Theme, Accent } from '@lib/types/theme';
@@ -117,6 +120,146 @@ export async function manageFollow(
   }
 
   await batch.commit();
+
+  if (type === 'follow')
+    await addNotification({
+      type: 'follow',
+      targetUserId,
+      fromUserId: userId
+    });
+  else await removeNotification('follow', targetUserId, userId);
+}
+
+/**
+ * Deterministic ids let us delete the matching notification again when the
+ * action is undone (unlike, unfollow) instead of searching for it.
+ */
+function getNotificationId(
+  type: NotificationType,
+  fromUserId: string,
+  tweetId?: string
+): string {
+  if (type === 'follow') return `follow__${fromUserId}`;
+  if (type === 'like') return `like__${tweetId as string}__${fromUserId}`;
+  return `reply__${tweetId as string}`;
+}
+
+type AddNotificationParams = {
+  type: NotificationType;
+  targetUserId: string;
+  fromUserId: string;
+  tweetId?: string;
+  parentTweetId?: string;
+};
+
+export async function addNotification({
+  type,
+  targetUserId,
+  fromUserId,
+  tweetId,
+  parentTweetId
+}: AddNotificationParams): Promise<void> {
+  // never notify people about their own actions
+  if (targetUserId === fromUserId) return;
+
+  const id = getNotificationId(type, fromUserId, tweetId);
+
+  const data: WithFieldValue<Omit<Notification, 'id'>> = {
+    type,
+    fromUserId,
+    tweetId: tweetId ?? null,
+    parentTweetId: parentTweetId ?? null,
+    read: false,
+    createdAt: serverTimestamp()
+  };
+
+  try {
+    await setDoc(doc(userNotificationsCollection(targetUserId), id), data);
+  } catch {
+    // a failed notification must never break the action that triggered it
+  }
+}
+
+export async function removeNotification(
+  type: NotificationType,
+  targetUserId: string,
+  fromUserId: string,
+  tweetId?: string
+): Promise<void> {
+  if (targetUserId === fromUserId) return;
+
+  const id = getNotificationId(type, fromUserId, tweetId);
+
+  try {
+    await deleteDoc(doc(userNotificationsCollection(targetUserId), id));
+  } catch {
+    // ignore — the notification may already be gone
+  }
+}
+
+export async function markNotificationsAsRead(
+  userId: string,
+  notificationIds: string[]
+): Promise<void> {
+  if (!notificationIds.length) return;
+
+  const batch = writeBatch(db);
+
+  notificationIds.forEach((id) =>
+    batch.update(doc(userNotificationsCollection(userId), id), { read: true })
+  );
+
+  await batch.commit();
+}
+
+export async function updateEmailDigest(
+  userId: string,
+  frequency: EmailDigestFrequency
+): Promise<void> {
+  await updateDoc(doc(usersCollection, userId), {
+    emailDigest: frequency,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function clearAllNotifications(userId: string): Promise<void> {
+  const { docs } = await getDocs(userNotificationsCollection(userId));
+
+  const batch = writeBatch(db);
+
+  docs.forEach(({ id }) =>
+    batch.delete(doc(userNotificationsCollection(userId), id))
+  );
+
+  await batch.commit();
+}
+
+/** Looks up who owns a tweet so we know who to notify. */
+async function getTweetOwnerId(tweetId: string): Promise<string | null> {
+  try {
+    const snapshot = await getDoc(doc(tweetsCollection, tweetId));
+    return snapshot.data()?.createdBy ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function addReplyNotification(
+  parentTweetId: string,
+  fromUserId: string,
+  replyTweetId: string
+): Promise<void> {
+  const targetUserId = await getTweetOwnerId(parentTweetId);
+
+  if (!targetUserId) return;
+
+  await addNotification({
+    type: 'reply',
+    targetUserId,
+    fromUserId,
+    tweetId: replyTweetId,
+    parentTweetId
+  });
 }
 
 export async function removeTweet(tweetId: string): Promise<void> {
@@ -252,6 +395,19 @@ export function manageLike(
     }
 
     await batch.commit();
+
+    const targetUserId = await getTweetOwnerId(tweetId);
+
+    if (!targetUserId) return;
+
+    if (type === 'like')
+      await addNotification({
+        type: 'like',
+        targetUserId,
+        fromUserId: userId,
+        tweetId
+      });
+    else await removeNotification('like', targetUserId, userId, tweetId);
   };
 }
 

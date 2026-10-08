@@ -18,11 +18,24 @@ service cloud.firestore {
       return (images is list && images.size() <= 4) || images == null;
     }
 
+    // Fields any signed-in user may change on someone else's tweet: likes,
+    // retweets and the reply counter. Everything else (text, images,
+    // createdBy, ...) stays owner/admin only.
+    function onlySocialFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['userLikes', 'userRetweets', 'userReplies', 'updatedAt']);
+    }
+
     match /tweets/{tweetId} {
-      allow read, update: if request.auth != null;
+      allow read: if request.auth != null;
       allow create: if isAuthorized(request.resource.data.createdBy)
                        && isValidText(request.resource.data.text)
                        && isValidImages(request.resource.data.images);
+      allow update: if request.auth != null
+                       && ((isAuthorized(resource.data.createdBy)
+                             && isValidText(request.resource.data.text)
+                             && isValidImages(request.resource.data.images))
+                           || onlySocialFieldsChanged());
       allow delete: if isAuthorized(resource.data.createdBy);
     }
 
@@ -32,6 +45,22 @@ service cloud.firestore {
       allow create: if request.auth.uid == userId;
       allow update: if isAuthorized(userId);
       allow delete: if isAdmin();
+    }
+
+    // Notifications live under the recipient, but are written by whoever
+    // triggered them, so other signed-in users need a narrow create path.
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, update, delete: if isAuthorized(userId);
+
+      allow create: if request.auth != null
+                       && request.resource.data.fromUserId == request.auth.uid
+                       && request.resource.data.fromUserId != userId
+                       && request.resource.data.read == false
+                       && request.resource.data.type in ['like', 'reply', 'follow'];
+
+      // the actor can withdraw their own notification (unlike, unfollow)
+      allow delete: if request.auth != null
+                       && resource.data.fromUserId == request.auth.uid;
     }
 
     // User sub-collections (bookmarks, stats) — only owner or admin

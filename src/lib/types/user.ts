@@ -20,7 +20,11 @@ export type User = {
   totalPhotos: number;
   pinnedTweet: string | null;
   coverPhotoURL: string | null;
+  /** how often to email a round-up of new posts; undefined means never set */
+  emailDigest?: EmailDigestFrequency;
 };
+
+export type EmailDigestFrequency = 'off' | 'daily' | 'weekly';
 
 export type EditableData = Extract<
   keyof User,

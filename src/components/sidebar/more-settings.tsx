@@ -2,12 +2,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu } from '@headlessui/react';
 import cn from 'clsx';
 import { useModal } from '@lib/hooks/useModal';
-import { preventBubbling } from '@lib/utils';
 import { Modal } from '@components/modal/modal';
 import { DisplayModal } from '@components/modal/display-modal';
 import { HeroIcon } from '@components/ui/hero-icon';
 import { Button } from '@components/ui/button';
-import { MenuLink } from './menu-link';
 import type { Variants } from 'framer-motion';
 
 export const variants: Variants = {
@@ -61,39 +59,9 @@ export function MoreSettings(): JSX.Element {
                 >
                   <Menu.Item>
                     {({ active }): JSX.Element => (
-                      <MenuLink
-                        className={cn(
-                          'flex w-full cursor-not-allowed gap-3 rounded-t-md p-4 duration-200',
-                          active && 'bg-main-sidebar-background'
-                        )}
-                        href='/settings'
-                        onClick={preventBubbling()}
-                      >
-                        <HeroIcon iconName='Cog8ToothIcon' />
-                        Settings and privacy
-                      </MenuLink>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }): JSX.Element => (
-                      <MenuLink
-                        className={cn(
-                          'flex w-full cursor-not-allowed gap-3 rounded-t-md p-4 duration-200',
-                          active && 'bg-main-sidebar-background'
-                        )}
-                        href='/help-center'
-                        onClick={preventBubbling()}
-                      >
-                        <HeroIcon iconName='QuestionMarkCircleIcon' />
-                        Help center
-                      </MenuLink>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }): JSX.Element => (
                       <Button
                         className={cn(
-                          'flex w-full gap-3 rounded-none rounded-b-md p-4 duration-200',
+                          'flex w-full gap-3 rounded-md p-4 duration-200',
                           active && 'bg-main-sidebar-background'
                         )}
                         onClick={openModal}

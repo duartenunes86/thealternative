@@ -20,7 +20,10 @@ export type User = {
   totalPhotos: number;
   pinnedTweet: string | null;
   coverPhotoURL: string | null;
+  emailDigest?: EmailDigestFrequency;
 };
+
+export type EmailDigestFrequency = 'off' | 'daily' | 'weekly';
 
 export type EditableData = Extract<
   keyof User,
