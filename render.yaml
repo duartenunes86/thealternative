@@ -47,3 +47,6 @@ services:
         sync: false
       - key: EMAIL_PORT
         sync: false
+      # CAN-SPAM requires a physical postal address for US recipients
+      - key: EMAIL_POSTAL_ADDRESS
+        sync: false

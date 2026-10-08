@@ -162,7 +162,7 @@ export default function Notifications(): JSX.Element {
       {userId && (
         <EmailDigestSettings
           userId={userId}
-          current={user?.emailDigest ?? 'weekly'}
+          current={user?.emailDigest ?? 'off'}
         />
       )}
       <section className='mt-0.5'>

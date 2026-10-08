@@ -7,11 +7,23 @@ const siteURL = process.env.NEXT_PUBLIC_URL ?? 'https://thealternative.social';
 
 /**
  * Applied to accounts that have never chosen a frequency.
- * Set to 'off' if you would rather every user opt in explicitly.
+ *
+ * 'off' means nobody is mailed until they explicitly opt in. This is
+ * deliberate: the operator is UK-established, so PECR applies to its sending
+ * regardless of where recipients live, and PECR's soft opt-in exception does
+ * not cover a free service (it requires a sale or negotiations for one).
+ * Opt-in also keeps the list engaged, which protects sender reputation.
  */
-const DEFAULT_FREQUENCY = 'weekly';
+const DEFAULT_FREQUENCY = 'off';
 
 const MAX_POSTS_PER_EMAIL = 15;
+
+/**
+ * CAN-SPAM requires a valid physical postal address in every commercial email
+ * sent to US recipients. Left blank the footer simply omits it, so nothing
+ * breaks, but US compliance needs this set.
+ */
+const postalAddress = process.env.EMAIL_POSTAL_ADDRESS ?? '';
 
 function unsubscribeUrl(userId: string): string {
   const token = createHmac('sha256', process.env.DIGEST_SECRET ?? '')
@@ -85,8 +97,9 @@ function renderEmail(
         <a href="${siteURL}/home" style="display:inline-block;background:#1da1f2;color:#fff;padding:10px 20px;border-radius:9999px;text-decoration:none;font-weight:600">Open The Alternative</a>
       </td></tr>
       <tr><td style="padding-top:24px;color:#687684;font-size:12px;line-height:1.5">
-        You're receiving this because you have an account on The Alternative.<br>
+        You asked to receive these round-ups from The Alternative.<br>
         <a href="${unsubUrl}" style="color:#687684">Unsubscribe from these emails</a>
+        ${postalAddress ? `<br><br>${escapeHtml(postalAddress)}` : ''}
       </td></tr>
     </table></div>`;
 
@@ -98,7 +111,8 @@ function renderEmail(
         `${authorName} (@${authorUsername}): ${body ?? 'No text'}\n${siteURL}/tweet/${id}`
     ),
     '',
-    `Unsubscribe: ${unsubUrl}`
+    `Unsubscribe: ${unsubUrl}`,
+    ...(postalAddress ? ['', postalAddress] : [])
   ].join('\n');
 
   return { subject, html, text };
