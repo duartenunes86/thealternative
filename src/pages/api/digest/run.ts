@@ -154,6 +154,13 @@ export default async function handler(
 
   const frequency = req.query.frequency === 'daily' ? 'daily' : 'weekly';
 
+  // Safety rails, because this endpoint mails every subscriber the moment it
+  // is called:
+  //   ?dryRun=1        report who would be mailed, send nothing
+  //   ?only=<email>    send to just that address, for a real end-to-end test
+  const dryRun = req.query.dryRun === '1' || req.query.dryRun === 'true';
+  const only = typeof req.query.only === 'string' ? req.query.only : null;
+
   const since = new Date();
   if (frequency === 'daily') since.setDate(since.getDate() - 1);
   else since.setDate(since.getDate() - 7);
@@ -282,8 +289,15 @@ export default async function handler(
 
     if (!email) continue;
 
+    if (only && email.toLowerCase() !== only.toLowerCase()) continue;
+
     const unsubUrl = unsubscribeUrl(userId);
     const { subject, html, text } = renderEmail(theirPosts, frequency, unsubUrl);
+
+    if (dryRun) {
+      sent += 1;
+      continue;
+    }
 
     try {
       await deliver(email, subject, html, text, unsubUrl);
@@ -293,5 +307,5 @@ export default async function handler(
     }
   }
 
-  res.status(200).json({ frequency, sent, failed: failures.length });
+  res.status(200).json({ frequency, dryRun, only, sent, failed: failures.length });
 }
