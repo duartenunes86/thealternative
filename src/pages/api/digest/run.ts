@@ -133,6 +133,17 @@ export default async function handler(
     return;
   }
 
+  // Prefer the project's own mailbox (hello@thealternative.social on
+  // ExclusiveHosting). Falls back to Gmail if no host is configured.
+  const host = process.env.EMAIL_HOST;
+  const port = Number(process.env.EMAIL_PORT ?? 465);
+
+  const transport = host
+    ? { host, port, secure: port === 465, auth: { user, pass } }
+    : { service: 'Gmail', auth: { user, pass } };
+
+  const fromName = process.env.EMAIL_FROM_NAME ?? 'The Alternative';
+
   const frequency = req.query.frequency === 'daily' ? 'daily' : 'weekly';
 
   const since = new Date();
@@ -194,7 +205,7 @@ export default async function handler(
     return;
   }
 
-  const client = createTransport({ service: 'Gmail', auth: { user, pass } });
+  const client = createTransport(transport);
 
   let sent = 0;
   const failures: string[] = [];
@@ -223,7 +234,7 @@ export default async function handler(
 
     try {
       await client.sendMail({
-        from: `The Alternative <${user}>`,
+        from: `${fromName} <${user}>`,
         to: email,
         subject,
         html,

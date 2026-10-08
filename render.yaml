@@ -36,8 +36,14 @@ services:
       # Shared secret guarding /api/digest/run and signing unsubscribe links
       - key: DIGEST_SECRET
         sync: false
-      # Gmail address and app password used to send the digest
+      # Mailbox used to send the digest. Set EMAIL_HOST to send from the
+      # project's own address (hello@thealternative.social via
+      # mail.exclusivehosting.net); leave it unset to fall back to Gmail.
       - key: EMAIL_API
         sync: false
       - key: EMAIL_API_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
         sync: false
