@@ -2,7 +2,12 @@ import { createHmac } from 'crypto';
 import { auth } from 'firebase-admin';
 import { createTransport } from 'nodemailer';
 import { firestore, functions, regionalFunctions } from './lib/utils';
-import { EMAIL_API, EMAIL_API_PASSWORD, DIGEST_SECRET } from './lib/env';
+import {
+  EMAIL_API,
+  EMAIL_API_PASSWORD,
+  DIGEST_SECRET,
+  isEmailConfigured
+} from './lib/env';
 import { SITE_URL, FUNCTIONS_BASE_URL } from './lib/constants';
 import type { Tweet, User, EmailDigestFrequency } from './types';
 
@@ -116,6 +121,11 @@ function renderEmail(
 }
 
 async function sendDigest(frequency: 'daily' | 'weekly'): Promise<void> {
+  if (!isEmailConfigured()) {
+    functions.logger.info('Email not configured; skipping digest.');
+    return;
+  }
+
   const since = new Date();
 
   if (frequency === 'daily') since.setDate(since.getDate() - 1);

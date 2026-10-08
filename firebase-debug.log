@@ -1,0 +1,137 @@
+[debug] [2026-10-08T21:08:35.590Z] ----------------------------------------------------------------------
+[debug] [2026-10-08T21:08:35.593Z] Command:       /home/duarte/.nvm/versions/node/v22.22.0/bin/node /home/duarte/.nvm/versions/node/v22.22.0/bin/firebase deploy --only functions:sendPushNotification --project thealternative-ed758 --non-interactive --debug
+[debug] [2026-10-08T21:08:35.594Z] CLI Version:   15.16.0
+[debug] [2026-10-08T21:08:35.594Z] Platform:      linux
+[debug] [2026-10-08T21:08:35.594Z] Node Version:  v22.22.0
+[debug] [2026-10-08T21:08:35.594Z] Time:          Thu Oct 08 2026 22:08:35 GMT+0100 (British Summer Time)
+[debug] [2026-10-08T21:08:35.594Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-08T21:08:36.955Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-10-08T21:08:36.956Z] > authorizing via FIREBASE_TOKEN environment variable
+[warn] ⚠  Authenticating with `FIREBASE_TOKEN` is deprecated and will be removed in a future major version of `firebase-tools`. Instead, use a service account key with `GOOGLE_APPLICATION_CREDENTIALS`: https://cloud.google.com/docs/authentication/getting-started 
+[debug] [2026-10-08T21:08:36.957Z] [iam] checking project thealternative-ed758 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-10-08T21:08:36.958Z] No OAuth tokens found
+[debug] [2026-10-08T21:08:36.958Z] No OAuth tokens found
+[debug] [2026-10-08T21:08:36.959Z] > refreshing access token with scopes: []
+[debug] [2026-10-08T21:08:36.961Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-10-08T21:08:36.961Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-08T21:08:37.056Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-10-08T21:08:37.057Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-08T21:08:37.057Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758:testIamPermissions [none]
+[debug] [2026-10-08T21:08:37.057Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758:testIamPermissions  x-goog-user-project=thealternative-ed758
+[debug] [2026-10-08T21:08:37.057Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-08T21:08:37.697Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758:testIamPermissions 200
+[debug] [2026-10-08T21:08:37.697Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-08T21:08:37.698Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:37.698Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:37.698Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/thealternative-ed758/serviceAccounts/thealternative-ed758@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-10-08T21:08:37.698Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/thealternative-ed758/serviceAccounts/thealternative-ed758@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-10-08T21:08:37.919Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/thealternative-ed758/serviceAccounts/thealternative-ed758@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-10-08T21:08:37.919Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/thealternative-ed758/serviceAccounts/thealternative-ed758@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'thealternative-ed758'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] ✔  functions: Finished running predeploy script. 
+[debug] [2026-10-08T21:08:47.134Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:47.135Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:47.135Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 [none]
+[debug] [2026-10-08T21:08:47.806Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 200
+[debug] [2026-10-08T21:08:47.807Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 {"projectNumber":"888353612685","projectId":"thealternative-ed758","lifecycleState":"ACTIVE","name":"thealternative","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-05-05T18:43:23.711Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-10-08T21:08:47.812Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:47.812Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:47.812Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thealternative-ed758/adminSdkConfig [none]
+[debug] [2026-10-08T21:08:48.643Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thealternative-ed758/adminSdkConfig 200
+[debug] [2026-10-08T21:08:48.644Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thealternative-ed758/adminSdkConfig {"projectId":"thealternative-ed758","storageBucket":"thealternative-ed758.firebasestorage.app"}
+[debug] [2026-10-08T21:08:48.644Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:48.644Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:48.645Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/thealternative-ed758/configs [none]
+[debug] [2026-10-08T21:08:49.473Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/thealternative-ed758/configs 200
+[debug] [2026-10-08T21:08:49.474Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/thealternative-ed758/configs {}
+[debug] [2026-10-08T21:08:49.476Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-10-08T21:08:50.060Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^10.2.0",
+    "firebase-functions": "^4.0.1",
+    "nodemailer": "^6.8.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.6",
+    "typescript": "^4.6.4"
+  },
+  "private": true
+}
+[debug] [2026-10-08T21:08:50.060Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[info] i  functions: You are using a version of firebase-functions SDK (4.0.1) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2026-10-08T21:08:50.062Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-10-08T21:08:50.069Z] Found firebase-functions binary at '/home/duarte/Downloads/thealternative/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8063
+
+[debug] [2026-10-08T21:08:50.470Z] Got response from /__/functions.yaml {"endpoints":{"normalizeStats":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.delete","eventFilters":{"resource":"projects/thealternative-ed758/databases/(default)/documents/tweets/{tweetId}"},"retry":false},"labels":{},"entryPoint":"normalizeStats"},"notifyEmail":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/thealternative-ed758/databases/(default)/documents/tweets/{tweetId}"},"retry":false},"labels":{},"entryPoint":"notifyEmail"},"sendPushNotification":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/thealternative-ed758/databases/(default)/documents/users/{userId}/notifications/{notificationId}"},"retry":false},"labels":{},"entryPoint":"sendPushNotification"},"dailyEmailDigest":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"scheduleTrigger":{"schedule":"0 9 * * *","timeZone":"Europe/London","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null}},"labels":{},"entryPoint":"dailyEmailDigest"},"weeklyEmailDigest":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"scheduleTrigger":{"schedule":"0 9 * * MON","timeZone":"Europe/London","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null}},"labels":{},"entryPoint":"weeklyEmailDigest"},"unsubscribeDigest":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["asia-southeast2"],"httpsTrigger":{},"entryPoint":"unsubscribeDigest"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"params":[{"name":"EMAIL_API","type":"string","default":""},{"name":"EMAIL_API_PASSWORD","type":"string","default":""},{"name":"TARGET_EMAIL","type":"string","default":""},{"name":"DIGEST_SECRET","type":"string","default":""}]}
+[info] shutdown requested via /__/quitquitquit
+
+[info] i  functions: Loaded environment variables from .env.thealternative-ed758. 
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged /home/duarte/Downloads/thealternative/functions (85.52 KB) for uploading 
+[debug] [2026-10-08T21:08:54.639Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:54.640Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:54.640Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/-/functions [none]
+[debug] [2026-10-08T21:08:55.409Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/-/functions 200
+[debug] [2026-10-08T21:08:55.409Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/-/functions {}
+[debug] [2026-10-08T21:08:55.410Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:55.410Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:55.411Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/thealternative-ed758/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-10-08T21:08:56.482Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/thealternative-ed758/locations/-/functions 200
+[debug] [2026-10-08T21:08:56.483Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/thealternative-ed758/locations/-/functions {}
+[info] i  functions: ensuring required API cloudscheduler.googleapis.com is enabled... 
+[debug] [2026-10-08T21:08:56.488Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:56.489Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:56.489Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 [none]
+[debug] [2026-10-08T21:08:57.359Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 200
+[debug] [2026-10-08T21:08:57.359Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/thealternative-ed758 {"projectNumber":"888353612685","projectId":"thealternative-ed758","lifecycleState":"ACTIVE","name":"thealternative","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-05-05T18:43:23.711Z"}
+[debug] [2026-10-08T21:08:57.363Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:57.364Z] Checked if tokens are valid: true, expires at: 1791497316057
+[debug] [2026-10-08T21:08:57.364Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl [none]
+[debug] [2026-10-08T21:08:57.365Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl {}
+[debug] [2026-10-08T21:08:57.803Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl 403
+[debug] [2026-10-08T21:08:57.804Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl {"error":{"code":403,"message":"Write access to project 'thealternative-ed758' was denied: please check billing account associated and retry","status":"PERMISSION_DENIED"}}
+[info] 
+
+There was an issue deploying your functions. Verify that your project has a Google App Engine instance setup at https://console.cloud.google.com/appengine and try again. If this issue persists, please contact support.
+[warn] ⚠  functions: Upload Error: Request to https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl had HTTP Error: 403, Write access to project 'thealternative-ed758' was denied: please check billing account associated and retry 
+[error] 
+[error] Error: Request to https://cloudfunctions.googleapis.com/v1/projects/thealternative-ed758/locations/asia-southeast2/functions:generateUploadUrl had HTTP Error: 403, Write access to project 'thealternative-ed758' was denied: please check billing account associated and retry
+[debug] [2026-10-08T21:08:57.808Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 403,
+      "message": "Write access to project 'thealternative-ed758' was denied: please check billing account associated and retry",
+      "status": "PERMISSION_DENIED"
+    }
+  },
+  "response": {
+    "statusCode": 403
+  }
+}

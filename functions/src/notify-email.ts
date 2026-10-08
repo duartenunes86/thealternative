@@ -1,12 +1,22 @@
 import { createTransport } from 'nodemailer';
 import { firestore, functions, regionalFunctions } from './lib/utils';
-import { EMAIL_API, EMAIL_API_PASSWORD, TARGET_EMAIL } from './lib/env';
+import {
+  EMAIL_API,
+  EMAIL_API_PASSWORD,
+  TARGET_EMAIL,
+  isEmailConfigured
+} from './lib/env';
 import { SITE_URL } from './lib/constants';
 import type { Tweet, User } from './types';
 
 export const notifyEmail = regionalFunctions.firestore
   .document('tweets/{tweetId}')
   .onCreate(async (snapshot): Promise<void> => {
+    if (!isEmailConfigured() || !TARGET_EMAIL.value()) {
+      functions.logger.info('Email not configured; skipping notification.');
+      return;
+    }
+
     functions.logger.info('Sending notification email.');
 
     const { text, createdBy, images, parent } = snapshot.data() as Tweet;
