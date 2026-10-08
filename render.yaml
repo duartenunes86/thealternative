@@ -25,3 +25,6 @@ services:
         value: 888353612685
       - key: NEXT_PUBLIC_APP_ID
         value: 1:888353612685:web:0de52ad7099866a94ad3c4
+      # Web Push (VAPID) public key — safe to expose, it is sent to browsers
+      - key: NEXT_PUBLIC_FCM_VAPID_KEY
+        value: BOzOWBIYilfRtV8b6A3kZ4lIqn3JQMuIaIZB3L62BMxD3vTKFcUL2Pp3ylsK72JObNh8ecznxB3Or0jsWee5nZo
