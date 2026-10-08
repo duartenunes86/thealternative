@@ -10,7 +10,7 @@ services:
       - key: NODE_VERSION
         value: 18
       - key: NEXT_PUBLIC_URL
-        value: https://thealternative.onrender.com
+        value: https://thealternative.social
       - key: NEXT_PUBLIC_USE_EMULATOR
         value: false
       - key: NEXT_PUBLIC_API_KEY

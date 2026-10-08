@@ -18,12 +18,12 @@ export function SEO({
   return (
     <Head>
       <title>{title}</title>
-      <meta name='og:title' content={title} />
+      <meta property='og:title' content={title} />
       {description && <meta name='description' content={description} />}
-      {description && <meta name='og:description' content={description} />}
+      {description && <meta property='og:description' content={description} />}
       {image && <meta property='og:image' content={image} />}
       <meta
-        name='og:url'
+        property='og:url'
         content={`${siteURL}${asPath === '/' ? '' : asPath}`}
       />
     </Head>
