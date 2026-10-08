@@ -133,8 +133,11 @@ export default async function handler(
     return;
   }
 
-  // Prefer the project's own mailbox (hello@thealternative.social on
-  // ExclusiveHosting). Falls back to Gmail if no host is configured.
+  // Render blocks outbound SMTP ports on its instances, so an SMTP transport
+  // just hangs there. A Resend key (re_...) is therefore sent over their HTTPS
+  // API instead; SMTP stays available for hosts that permit it.
+  const useResendApi = pass.startsWith('re_');
+
   const host = process.env.EMAIL_HOST;
   const port = Number(process.env.EMAIL_PORT ?? 465);
 
@@ -143,6 +146,10 @@ export default async function handler(
     : { service: 'Gmail', auth: { user, pass } };
 
   const fromName = process.env.EMAIL_FROM_NAME ?? 'The Alternative';
+
+  // With a relay like Resend the SMTP username is not an address ("resend"),
+  // so the visible sender is configured separately.
+  const fromAddress = process.env.EMAIL_FROM ?? user;
 
   const frequency = req.query.frequency === 'daily' ? 'daily' : 'weekly';
 
@@ -205,7 +212,52 @@ export default async function handler(
     return;
   }
 
-  const client = createTransport(transport);
+  const client = useResendApi ? null : createTransport(transport);
+
+  async function deliver(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+    unsubUrl: string
+  ): Promise<void> {
+    if (!useResendApi) {
+      await client!.sendMail({
+        from: `${fromName} <${fromAddress}>`,
+        to,
+        subject,
+        html,
+        text,
+        headers: {
+          'List-Unsubscribe': `<${unsubUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        }
+      });
+      return;
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${pass}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: `${fromName} <${fromAddress}>`,
+        to: [to],
+        subject,
+        html,
+        text,
+        headers: {
+          'List-Unsubscribe': `<${unsubUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        }
+      })
+    });
+
+    if (!response.ok)
+      throw new Error(`Resend ${response.status}: ${await response.text()}`);
+  }
 
   let sent = 0;
   const failures: string[] = [];
@@ -233,17 +285,7 @@ export default async function handler(
     const { subject, html, text } = renderEmail(theirPosts, frequency, unsubUrl);
 
     try {
-      await client.sendMail({
-        from: `${fromName} <${user}>`,
-        to: email,
-        subject,
-        html,
-        text,
-        headers: {
-          'List-Unsubscribe': `<${unsubUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-        }
-      });
+      await deliver(email, subject, html, text, unsubUrl);
       sent += 1;
     } catch {
       failures.push(userId);
