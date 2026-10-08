@@ -149,7 +149,8 @@ export default async function handler(
 
   // With a relay like Resend the SMTP username is not an address ("resend"),
   // so the visible sender is configured separately.
-  const fromAddress = process.env.EMAIL_FROM ?? user;
+  const fromAddress: string = process.env.EMAIL_FROM ?? user;
+  const apiKey: string = pass;
 
   const frequency = req.query.frequency === 'daily' ? 'daily' : 'weekly';
 
@@ -239,7 +240,7 @@ export default async function handler(
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${pass}`,
+        authorization: `Bearer ${apiKey}`,
         'content-type': 'application/json'
       },
       body: JSON.stringify({
