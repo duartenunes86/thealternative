@@ -22,7 +22,13 @@ export type User = {
   coverPhotoURL: string | null;
   /** how often to email a round-up of new posts; undefined means never set */
   emailDigest?: EmailDigestFrequency;
+  /** emails about your own activity (new followers, replies, likes, messages); undefined means on */
+  emailActivity?: EmailActivitySetting;
+  /** when the last activity email was sent (set by the server) */
+  activityEmailedAt?: Timestamp | null;
 };
+
+export type EmailActivitySetting = 'on' | 'off';
 
 export type EmailDigestFrequency = 'off' | 'daily' | 'weekly';
 

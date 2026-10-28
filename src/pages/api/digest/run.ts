@@ -1,9 +1,14 @@
-import { createTransport } from 'nodemailer';
-import { createHmac } from 'crypto';
 import { adminAuth, adminDb, isAdminConfigured } from '@lib/firebase/admin';
+import {
+  siteURL,
+  postalAddress,
+  escapeHtml,
+  unsubscribeUrl as makeUnsubscribeUrl,
+  createMailer,
+  emailConfigured,
+  schedulerAuthorized
+} from '@lib/server/mail';
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-const siteURL = process.env.NEXT_PUBLIC_URL ?? 'https://thealternative.social';
 
 /**
  * Applied to accounts that have never chosen a frequency.
@@ -13,34 +18,16 @@ const siteURL = process.env.NEXT_PUBLIC_URL ?? 'https://thealternative.social';
  * regardless of where recipients live, and PECR's soft opt-in exception does
  * not cover a free service (it requires a sale or negotiations for one).
  * Opt-in also keeps the list engaged, which protects sender reputation.
+ * New accounts are asked once on the home page (DigestPrompt).
  */
 const DEFAULT_FREQUENCY = 'off';
 
 const MAX_POSTS_PER_EMAIL = 15;
+const MAX_MEMBERS_PER_EMAIL = 8;
 
-/**
- * CAN-SPAM requires a valid physical postal address in every commercial email
- * sent to US recipients. Left blank the footer simply omits it, so nothing
- * breaks, but US compliance needs this set.
- */
-const postalAddress = process.env.EMAIL_POSTAL_ADDRESS ?? '';
+const unsubscribeUrl = (userId: string): string => makeUnsubscribeUrl(userId, 'digest');
 
-function unsubscribeUrl(userId: string): string {
-  const token = createHmac('sha256', process.env.DIGEST_SECRET ?? '')
-    .update(userId)
-    .digest('hex')
-    .slice(0, 32);
-
-  return `${siteURL}/api/digest/unsubscribe?uid=${userId}&token=${token}`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+type MemberForEmail = { name: string; username: string; bio: string | null };
 
 type PostForEmail = {
   id: string;
@@ -52,15 +39,32 @@ type PostForEmail = {
 
 function renderEmail(
   posts: PostForEmail[],
+  members: MemberForEmail[],
   frequency: string,
   unsubUrl: string
 ): { subject: string; html: string; text: string } {
   const period = frequency === 'daily' ? 'today' : 'this week';
 
-  const subject =
-    posts.length === 1
-      ? `1 new post on The Alternative ${period}`
-      : `${posts.length} new posts on The Alternative ${period}`;
+  const postsPart = posts.length === 1 ? '1 new post' : `${posts.length} new posts`;
+  const membersPart = members.length
+    ? ` and ${members.length} new member${members.length > 1 ? 's' : ''}`
+    : '';
+  const subject = posts.length
+    ? `${postsPart}${membersPart} on The Alternative ${period}`
+    : `${members.length} new member${members.length > 1 ? 's' : ''} joined The Alternative ${period}`;
+
+  const memberRows = members.length
+    ? '<tr><td style="padding:18px 0 4px;font-weight:700;color:#14171a">New members</td></tr>' +
+      members
+        .map(
+          ({ name, username, bio }) => `<tr><td style="padding:8px 0;border-bottom:1px solid #e6ecf0">
+        <a href="${siteURL}/user/${escapeHtml(username)}" style="color:#14171a;text-decoration:none;font-weight:600">${escapeHtml(name)}</a>
+        <span style="color:#687684">@${escapeHtml(username)}</span>
+        ${bio ? `<div style="color:#687684;font-size:14px;margin-top:2px">${escapeHtml(bio.length > 120 ? `${bio.slice(0, 120)}…` : bio)}</div>` : ''}
+      </td></tr>`
+        )
+        .join('')
+    : '';
 
   const items = posts
     .map(({ id, text, imageCount, authorName, authorUsername }) => {
@@ -93,6 +97,7 @@ function renderEmail(
         <p style="margin:0 0 16px;color:#687684;font-size:14px">Here's what you missed ${period}.</p>
       </td></tr>
       ${items}
+      ${memberRows}
       <tr><td style="padding-top:20px">
         <a href="${siteURL}/home" style="display:inline-block;background:#1da1f2;color:#fff;padding:10px 20px;border-radius:9999px;text-decoration:none;font-weight:600">Open The Alternative</a>
       </td></tr>
@@ -110,6 +115,9 @@ function renderEmail(
       ({ id, text: body, authorName, authorUsername }) =>
         `${authorName} (@${authorUsername}): ${body ?? 'No text'}\n${siteURL}/tweet/${id}`
     ),
+    ...(members.length
+      ? ['', 'New members:', ...members.map(({ name, username }) => `${name} (@${username}) ${siteURL}/user/${username}`)]
+      : []),
     '',
     `Unsubscribe: ${unsubUrl}`,
     ...(postalAddress ? ['', postalAddress] : [])
@@ -122,14 +130,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
-  // Called by an external scheduler, so it is guarded by a shared secret
+  // Called by the server's scheduler, so it is guarded by a shared secret
   // rather than a user session.
-  const secret = process.env.DIGEST_SECRET;
-  const provided =
-    (req.headers['x-digest-secret'] as string | undefined) ??
-    (req.query.secret as string | undefined);
-
-  if (!secret || provided !== secret) {
+  if (!schedulerAuthorized(req.headers['x-digest-secret'], req.query.secret)) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -139,32 +142,10 @@ export default async function handler(
     return;
   }
 
-  const user = process.env.EMAIL_API;
-  const pass = process.env.EMAIL_API_PASSWORD;
-
-  if (!user || !pass) {
+  if (!emailConfigured()) {
     res.status(503).json({ error: 'Email not configured' });
     return;
   }
-
-  // Render blocks outbound SMTP ports on its instances, so an SMTP transport
-  // just hangs there. A Resend key (re_...) is therefore sent over their HTTPS
-  // API instead; SMTP stays available for hosts that permit it.
-  const useResendApi = pass.startsWith('re_');
-
-  const host = process.env.EMAIL_HOST;
-  const port = Number(process.env.EMAIL_PORT ?? 465);
-
-  const transport = host
-    ? { host, port, secure: port === 465, auth: { user, pass } }
-    : { service: 'Gmail', auth: { user, pass } };
-
-  const fromName = process.env.EMAIL_FROM_NAME ?? 'The Alternative';
-
-  // With a relay like Resend the SMTP username is not an address ("resend"),
-  // so the visible sender is configured separately.
-  const fromAddress: string = process.env.EMAIL_FROM ?? user;
-  const apiKey: string = pass;
 
   const frequency = req.query.frequency === 'daily' ? 'daily' : 'weekly';
 
@@ -201,12 +182,20 @@ export default async function handler(
     .map((doc) => ({ id: doc.id, ...doc.data() } as TweetRow))
     .filter(({ parent }) => !parent);
 
-  if (!tweets.length) {
-    res.status(200).json({ sent: 0, reason: 'no-new-posts' });
+  const usersSnapshot = await db.collection('users').get();
+
+  const createdMs = (value: unknown): number =>
+    (value as { toMillis?: () => number } | undefined)?.toMillis?.() ?? 0;
+
+  const newMembers = usersSnapshot.docs
+    .map((doc): Record<string, unknown> & { id: string } => ({ id: doc.id, ...doc.data() }))
+    .filter((u) => createdMs(u.createdAt) >= since.getTime())
+    .sort((a, b) => createdMs(b.createdAt) - createdMs(a.createdAt));
+
+  if (!tweets.length && !newMembers.length) {
+    res.status(200).json({ sent: 0, reason: 'nothing-new' });
     return;
   }
-
-  const usersSnapshot = await db.collection('users').get();
 
   const usersById = new Map<string, Record<string, unknown>>();
   usersSnapshot.docs.forEach((doc) => usersById.set(doc.id, doc.data()));
@@ -234,52 +223,7 @@ export default async function handler(
     return;
   }
 
-  const client = useResendApi ? null : createTransport(transport);
-
-  async function deliver(
-    to: string,
-    subject: string,
-    html: string,
-    text: string,
-    unsubUrl: string
-  ): Promise<void> {
-    if (!useResendApi) {
-      await client!.sendMail({
-        from: `${fromName} <${fromAddress}>`,
-        to,
-        subject,
-        html,
-        text,
-        headers: {
-          'List-Unsubscribe': `<${unsubUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-        }
-      });
-      return;
-    }
-
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: `${fromName} <${fromAddress}>`,
-        to: [to],
-        subject,
-        html,
-        text,
-        headers: {
-          'List-Unsubscribe': `<${unsubUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-        }
-      })
-    });
-
-    if (!response.ok)
-      throw new Error(`Resend ${response.status}: ${await response.text()}`);
-  }
+  const deliver = createMailer();
 
   let sent = 0;
   const failures: string[] = [];
@@ -291,7 +235,16 @@ export default async function handler(
       (post) => tweets.find((t) => t.id === post.id)?.createdBy !== userId
     );
 
-    if (!theirPosts.length) continue;
+    const theirMembers: MemberForEmail[] = newMembers
+      .filter((m) => m.id !== userId)
+      .slice(0, MAX_MEMBERS_PER_EMAIL)
+      .map((m) => ({
+        name: (m.name as string) ?? 'Someone',
+        username: (m.username as string) ?? 'unknown',
+        bio: (m.bio as string | null) ?? null
+      }));
+
+    if (!theirPosts.length && !theirMembers.length) continue;
 
     let email: string | undefined;
 
@@ -306,7 +259,7 @@ export default async function handler(
     if (only && email.toLowerCase() !== only.toLowerCase()) continue;
 
     const unsubUrl = unsubscribeUrl(userId);
-    const { subject, html, text } = renderEmail(theirPosts, frequency, unsubUrl);
+    const { subject, html, text } = renderEmail(theirPosts, theirMembers, frequency, unsubUrl);
 
     if (dryRun) {
       sent += 1;
@@ -314,7 +267,7 @@ export default async function handler(
     }
 
     try {
-      await deliver(email, subject, html, text, unsubUrl);
+      await deliver({ to: email, subject, html, text, unsubUrl });
       sent += 1;
     } catch {
       failures.push(userId);
