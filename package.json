@@ -12,7 +12,9 @@
     "lint": "next lint",
     "test": "jest --watch",
     "test:ci": "jest --ci",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-thealternative \"jest --ci tests/firestore-rules.test.ts\"",
+    "test:unit": "jest --ci tests/activity-email.test.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.2",
@@ -54,7 +56,8 @@
     "prettier-plugin-tailwindcss": "^0.1.13",
     "sass": "^1.54.4",
     "tailwindcss": "^3.2.4",
-    "typescript": "4.7.4"
+    "typescript": "4.7.4",
+    "@firebase/rules-unit-testing": "^2.0.7"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"

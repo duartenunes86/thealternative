@@ -1,5 +1,6 @@
-import { createHmac, timingSafeEqual } from 'crypto';
 import { adminDb, isAdminConfigured } from '@lib/firebase/admin';
+import { tokenIsValid } from '@lib/server/mail';
+import type { EmailKind } from '@lib/server/mail';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const siteURL = process.env.NEXT_PUBLIC_URL ?? 'https://thealternative.social';
@@ -18,19 +19,13 @@ function page(title: string, message: string): string {
 </body></html>`;
 }
 
-function tokensMatch(a: string, b: string): boolean {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  if (left.length !== right.length) return false;
-  return timingSafeEqual(left, right);
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
   const uid = String(req.query.uid ?? '');
   const token = String(req.query.token ?? '');
+  const kind: EmailKind = req.query.kind === 'activity' ? 'activity' : 'digest';
   const secret = process.env.DIGEST_SECRET;
 
   res.setHeader('content-type', 'text/html; charset=utf-8');
@@ -42,12 +37,7 @@ export default async function handler(
     return;
   }
 
-  const expected = createHmac('sha256', secret)
-    .update(uid)
-    .digest('hex')
-    .slice(0, 32);
-
-  if (!tokensMatch(token, expected)) {
+  if (!tokenIsValid(uid, kind, token)) {
     res
       .status(403)
       .send(page('Invalid link', 'This unsubscribe link is not valid.'));
@@ -55,7 +45,9 @@ export default async function handler(
   }
 
   try {
-    await adminDb().doc(`users/${uid}`).update({ emailDigest: 'off' });
+    await adminDb()
+      .doc(`users/${uid}`)
+      .update(kind === 'activity' ? { emailActivity: 'off' } : { emailDigest: 'off' });
   } catch {
     res
       .status(500)
@@ -80,7 +72,9 @@ export default async function handler(
     .send(
       page(
         'You’re unsubscribed',
-        'You will no longer receive round-up emails. You can turn them back on any time from your notifications page.'
+        kind === 'activity'
+          ? 'You will no longer receive activity emails. You can turn them back on any time from your notifications page.'
+          : 'You will no longer receive round-up emails. You can turn them back on any time from your notifications page.'
       )
     );
 }

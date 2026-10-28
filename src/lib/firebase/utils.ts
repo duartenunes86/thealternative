@@ -1,5 +1,6 @@
 import {
   doc,
+  collection,
   query,
   where,
   limit,
@@ -26,7 +27,12 @@ import {
 } from './collections';
 import type { WithFieldValue, Query } from 'firebase/firestore';
 import type { Notification, NotificationType } from '@lib/types/notification';
-import type { EditableUserData, EmailDigestFrequency } from '@lib/types/user';
+import type {
+  EditableUserData,
+  EmailDigestFrequency,
+  EmailActivitySetting
+} from '@lib/types/user';
+import { conversationIdFor, MAX_MESSAGE_LENGTH } from '@lib/types/message';
 import type { FilesWithId, ImagesPreview } from '@lib/types/file';
 import type { Bookmark } from '@lib/types/bookmark';
 import type { Theme, Accent } from '@lib/types/theme';
@@ -462,4 +468,100 @@ export async function clearAllBookmarks(userId: string): Promise<void> {
   bookmarksSnapshot.forEach(({ ref }) => batch.delete(ref));
 
   await batch.commit();
+}
+
+export async function updateEmailActivity(
+  userId: string,
+  setting: EmailActivitySetting
+): Promise<void> {
+  await updateDoc(doc(usersCollection, userId), {
+    emailActivity: setting,
+    updatedAt: serverTimestamp()
+  });
+}
+
+// ---------- direct messages ----------
+
+/**
+ * Makes sure the conversation between two people exists and returns its id.
+ * Creating it twice is harmless: the id is the same and only missing fields
+ * are written.
+ */
+export async function openConversation(
+  userId: string,
+  otherUserId: string
+): Promise<string> {
+  const id = conversationIdFor(userId, otherUserId);
+  const ref = doc(db, 'conversations', id);
+  const existing = await getDoc(ref);
+
+  if (!existing.exists())
+    await setDoc(ref, {
+      participants: [userId, otherUserId].sort(),
+      lastMessage: null,
+      unread: { [userId]: 0, [otherUserId]: 0 },
+      blockedBy: [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+  return id;
+}
+
+export async function sendMessage(
+  conversationId: string,
+  fromUserId: string,
+  toUserId: string,
+  rawText: string
+): Promise<void> {
+  const text = rawText.trim().slice(0, MAX_MESSAGE_LENGTH);
+  if (!text) return;
+
+  const batch = writeBatch(db);
+  const messageRef = doc(collection(db, 'conversations', conversationId, 'messages'));
+
+  batch.set(messageRef, {
+    from: fromUserId,
+    text,
+    createdAt: serverTimestamp()
+  });
+
+  batch.update(doc(db, 'conversations', conversationId), {
+    lastMessage: { text: text.slice(0, 140), from: fromUserId, createdAt: serverTimestamp() },
+    [`unread.${toUserId}`]: increment(1),
+    updatedAt: serverTimestamp()
+  });
+
+  await batch.commit();
+}
+
+export async function markConversationRead(
+  conversationId: string,
+  userId: string
+): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'conversations', conversationId), {
+      [`unread.${userId}`]: 0
+    });
+  } catch {
+    // the conversation may have been removed; nothing to mark
+  }
+}
+
+export async function setConversationBlocked(
+  conversationId: string,
+  userId: string,
+  blocked: boolean
+): Promise<void> {
+  await updateDoc(doc(db, 'conversations', conversationId), {
+    blockedBy: blocked ? arrayUnion(userId) : arrayRemove(userId),
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function deleteMyMessage(
+  conversationId: string,
+  messageId: string
+): Promise<void> {
+  await deleteDoc(doc(db, 'conversations', conversationId, 'messages', messageId));
 }

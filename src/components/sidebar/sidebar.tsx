@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useAuth } from '@lib/context/auth-context';
 import { useWindow } from '@lib/context/window-context';
 import { useModal } from '@lib/hooks/useModal';
+import { useConversations } from '@lib/hooks/useConversations';
 import { Modal } from '@components/modal/modal';
 import { Input } from '@components/input/input';
 import { CustomIcon } from '@components/ui/custom-icon';
@@ -17,6 +18,7 @@ export type NavLink = {
   iconName: IconName;
   disabled?: boolean;
   canBeHidden?: boolean;
+  badge?: number;
 };
 
 const navLinks: Readonly<NavLink[]> = [
@@ -35,6 +37,11 @@ const navLinks: Readonly<NavLink[]> = [
     href: '/notifications',
     linkName: 'Notifications',
     iconName: 'BellIcon'
+  },
+  {
+    href: '/messages',
+    linkName: 'Messages',
+    iconName: 'EnvelopeIcon'
   },
   {
     href: '/bookmarks',
@@ -57,6 +64,8 @@ export function Sidebar(): JSX.Element {
   const { open, openModal, closeModal } = useModal();
 
   const username = user?.username as string;
+
+  const { unreadTotal } = useConversations(user?.id ?? null);
 
   return (
     <header
@@ -91,7 +100,11 @@ export function Sidebar(): JSX.Element {
           </h1>
           <nav className='flex items-center justify-around xs:flex-col xs:justify-center xl:block'>
             {navLinks.map(({ ...linkData }) => (
-              <SidebarLink {...linkData} key={linkData.href} />
+              <SidebarLink
+                {...linkData}
+                badge={linkData.href === '/messages' ? unreadTotal : undefined}
+                key={linkData.href}
+              />
             ))}
             <SidebarLink
               href={`/user/${username}`}

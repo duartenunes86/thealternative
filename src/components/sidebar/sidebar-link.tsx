@@ -15,7 +15,8 @@ export function SidebarLink({
   iconName,
   linkName,
   disabled,
-  canBeHidden
+  canBeHidden,
+  badge
 }: SidebarLinkProps): JSX.Element {
   const { asPath } = useRouter();
   const isActive = username ? asPath.includes(username) : asPath === href;
@@ -39,6 +40,7 @@ export function SidebarLink({
             isActive && 'font-bold'
           )}
         >
+          <span className='relative'>
           <HeroIcon
             className={cn(
               'h-7 w-7',
@@ -49,6 +51,16 @@ export function SidebarLink({
             iconName={iconName}
             solid={isActive}
           />
+          {!!badge && (
+            <span
+              className='absolute -top-1.5 -right-2 flex h-5 min-w-[20px] items-center justify-center
+                         rounded-full bg-main-accent px-1 text-xs font-bold text-white'
+              aria-label={`${badge} unread`}
+            >
+              {badge > 99 ? '99+' : badge}
+            </span>
+          )}
+          </span>
           <p className='hidden xl:block'>{linkName}</p>
         </div>
       </a>
