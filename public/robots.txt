@@ -1,0 +1,18 @@
+# Public pages — profiles, posts and discovery — are open to crawlers.
+User-agent: *
+Allow: /$
+Allow: /user/
+Allow: /tweet/
+Allow: /trends
+Allow: /people
+
+# Signed-in areas hold nothing useful to a crawler and some are per-user.
+Disallow: /home
+Disallow: /notifications
+Disallow: /bookmarks
+Disallow: /api/
+Disallow: /user/*/likes
+Disallow: /user/*/followers
+Disallow: /user/*/following
+
+Sitemap: https://thealternative.social/sitemap.xml

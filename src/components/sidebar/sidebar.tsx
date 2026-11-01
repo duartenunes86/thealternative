@@ -50,6 +50,26 @@ const navLinks: Readonly<NavLink[]> = [
   }
 ];
 
+/**
+ * Shown to signed-out visitors, who typically arrive on a profile or post
+ * from a search engine. Only the publicly browsable pages appear; everything
+ * else needs an account.
+ */
+const publicNavLinks: Readonly<NavLink[]> = [
+  {
+    href: '/trends',
+    linkName: 'Explore',
+    iconName: 'HashtagIcon',
+    canBeHidden: true
+  },
+  {
+    href: '/people',
+    linkName: 'People',
+    iconName: 'UserGroupIcon',
+    canBeHidden: true
+  }
+];
+
 export function Sidebar(): JSX.Element {
   const { user } = useAuth();
   const { isMobile } = useWindow();
@@ -90,17 +110,36 @@ export function Sidebar(): JSX.Element {
             </Link>
           </h1>
           <nav className='flex items-center justify-around xs:flex-col xs:justify-center xl:block'>
-            {navLinks.map(({ ...linkData }) => (
+            {/* Signed-out visitors land here from search, so they get the
+                browsable pages only — the rest needs an account. */}
+            {(user ? navLinks : publicNavLinks).map(({ ...linkData }) => (
               <SidebarLink {...linkData} key={linkData.href} />
             ))}
-            <SidebarLink
-              href={`/user/${username}`}
-              username={username}
-              linkName='Profile'
-              iconName='UserIcon'
-            />
-            {!isMobile && <MoreSettings />}
+            {user && (
+              <SidebarLink
+                href={`/user/${username}`}
+                username={username}
+                linkName='Profile'
+                iconName='UserIcon'
+              />
+            )}
+            {user && !isMobile && <MoreSettings />}
           </nav>
+          {!user && (
+            <Link href='/'>
+              <a
+                className='accent-tab absolute right-4 -translate-y-[72px] rounded-full bg-main-accent px-4 py-2
+                           text-center text-lg font-bold text-white outline-none transition hover:brightness-90
+                           active:brightness-75 xs:static xs:translate-y-0 xl:w-11/12'
+              >
+                <span className='hidden xl:block'>Log in</span>
+                <span className='block xl:hidden'>
+                  <CustomIcon className='h-6 w-6' iconName='TwitterIcon' />
+                </span>
+              </a>
+            </Link>
+          )}
+          {user && (
           <Button
             className='accent-tab absolute right-4 -translate-y-[72px] bg-main-accent text-lg font-bold text-white
                        outline-none transition hover:brightness-90 active:brightness-75 xs:static xs:translate-y-0
@@ -113,8 +152,9 @@ export function Sidebar(): JSX.Element {
             />
             <p className='hidden xl:block'>Post</p>
           </Button>
+          )}
         </section>
-        {!isMobile && <SidebarProfile />}
+        {user && !isMobile && <SidebarProfile />}
       </div>
     </header>
   );

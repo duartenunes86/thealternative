@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import {
   TrendsLayout,
-  ProtectedLayout
+  PublicLayout
 } from '@components/layout/common-layout';
 import { MainLayout } from '@components/layout/main-layout';
 import { SEO } from '@components/common/seo';
@@ -34,9 +34,9 @@ export default function Bookmarks(): JSX.Element {
 }
 
 Bookmarks.getLayout = (page: ReactElement): ReactNode => (
-  <ProtectedLayout>
+  <PublicLayout>
     <MainLayout>
       <TrendsLayout>{page}</TrendsLayout>
     </MainLayout>
-  </ProtectedLayout>
+  </PublicLayout>
 );

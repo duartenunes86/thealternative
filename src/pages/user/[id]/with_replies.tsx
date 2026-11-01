@@ -4,7 +4,7 @@ import { useCollection } from '@lib/hooks/useCollection';
 import { useDocument } from '@lib/hooks/useDocument';
 import { tweetsCollection } from '@lib/firebase/collections';
 import { useUser } from '@lib/context/user-context';
-import { UserLayout, ProtectedLayout } from '@components/layout/common-layout';
+import { UserLayout, PublicLayout } from '@components/layout/common-layout';
 import { MainLayout } from '@components/layout/main-layout';
 import { SEO } from '@components/common/seo';
 import { UserDataLayout } from '@components/layout/user-data-layout';
@@ -32,10 +32,10 @@ export default function UserWithReplies(): JSX.Element {
   const { data, loading } = useCollection(
     query(
       tweetsCollection,
-      where('createdBy', '==', id),
+      where('createdBy', '==', id ?? 'null'),
       orderBy('createdAt', 'desc')
     ),
-    { includeUser: true, allowNull: true }
+    { includeUser: true, allowNull: true, disabled: !id }
   );
 
   return (
@@ -65,7 +65,7 @@ export default function UserWithReplies(): JSX.Element {
 }
 
 UserWithReplies.getLayout = (page: ReactElement): ReactNode => (
-  <ProtectedLayout>
+  <PublicLayout>
     <MainLayout>
       <UserLayout>
         <UserDataLayout>
@@ -73,5 +73,5 @@ UserWithReplies.getLayout = (page: ReactElement): ReactNode => (
         </UserDataLayout>
       </UserLayout>
     </MainLayout>
-  </ProtectedLayout>
+  </PublicLayout>
 );

@@ -4,7 +4,7 @@ import { useCollection } from '@lib/hooks/useCollection';
 import { tweetsCollection } from '@lib/firebase/collections';
 import { useUser } from '@lib/context/user-context';
 import { mergeData } from '@lib/merge';
-import { UserLayout, ProtectedLayout } from '@components/layout/common-layout';
+import { UserLayout, PublicLayout } from '@components/layout/common-layout';
 import { MainLayout } from '@components/layout/main-layout';
 import { SEO } from '@components/common/seo';
 import { UserDataLayout } from '@components/layout/user-data-layout';
@@ -22,10 +22,10 @@ export default function UserMedia(): JSX.Element {
   const { data, loading } = useCollection(
     query(
       tweetsCollection,
-      where('createdBy', '==', id),
+      where('createdBy', '==', id ?? 'null'),
       where('images', '!=', null)
     ),
-    { includeUser: true, allowNull: true }
+    { includeUser: true, allowNull: true, disabled: !id }
   );
 
   const sortedTweets = mergeData(true, data);
@@ -57,7 +57,7 @@ export default function UserMedia(): JSX.Element {
 }
 
 UserMedia.getLayout = (page: ReactElement): ReactNode => (
-  <ProtectedLayout>
+  <PublicLayout>
     <MainLayout>
       <UserLayout>
         <UserDataLayout>
@@ -65,5 +65,5 @@ UserMedia.getLayout = (page: ReactElement): ReactNode => (
         </UserDataLayout>
       </UserLayout>
     </MainLayout>
-  </ProtectedLayout>
+  </PublicLayout>
 );

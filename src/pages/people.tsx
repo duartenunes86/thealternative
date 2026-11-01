@@ -6,7 +6,7 @@ import { usersCollection } from '@lib/firebase/collections';
 import { useInfiniteScroll } from '@lib/hooks/useInfiniteScroll';
 import {
   PeopleLayout,
-  ProtectedLayout
+  PublicLayout
 } from '@components/layout/common-layout';
 import { MainLayout } from '@components/layout/main-layout';
 import { SEO } from '@components/common/seo';
@@ -23,7 +23,7 @@ export default function People(): JSX.Element {
 
   const { data, loading, LoadMore } = useInfiniteScroll(
     usersCollection,
-    [where('id', '!=', user?.id)],
+    [where('id', '!=', user?.id ?? 'null')],
     { allowNull: true, preserve: true },
     { marginBottom: 500 }
   );
@@ -55,9 +55,9 @@ export default function People(): JSX.Element {
 }
 
 People.getLayout = (page: ReactElement): ReactNode => (
-  <ProtectedLayout>
+  <PublicLayout>
     <MainLayout>
       <PeopleLayout>{page}</PeopleLayout>
     </MainLayout>
-  </ProtectedLayout>
+  </PublicLayout>
 );

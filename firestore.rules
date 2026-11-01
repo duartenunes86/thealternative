@@ -27,7 +27,10 @@ service cloud.firestore {
     }
 
     match /tweets/{tweetId} {
-      allow read: if request.auth != null;
+      // Public, like an open Instagram profile: posts are readable by anyone,
+      // signed in or not, so they can be shared and indexed by search engines.
+      // Writing still requires auth and ownership.
+      allow read: if true;
       allow create: if isAuthorized(request.resource.data.createdBy)
                        && isValidText(request.resource.data.text)
                        && isValidImages(request.resource.data.images);
@@ -39,9 +42,10 @@ service cloud.firestore {
       allow delete: if isAuthorized(resource.data.createdBy);
     }
 
-    // User profile — readable by any logged-in user, writable only by owner or admin
+    // Public profile. The document holds no contact details — email lives in
+    // Firebase Auth, not here — so this exposes only what a profile page shows.
     match /users/{userId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth.uid == userId;
       allow update: if isAuthorized(userId);
       allow delete: if isAdmin();

@@ -6,7 +6,7 @@ import { tweetsCollection } from '@lib/firebase/collections';
 import { useCollection } from '@lib/hooks/useCollection';
 import { useDocument } from '@lib/hooks/useDocument';
 import { isPlural } from '@lib/utils';
-import { HomeLayout, ProtectedLayout } from '@components/layout/common-layout';
+import { HomeLayout, PublicLayout } from '@components/layout/common-layout';
 import { MainLayout } from '@components/layout/main-layout';
 import { MainContainer } from '@components/home/main-container';
 import { MainHeader } from '@components/home/main-header';
@@ -17,8 +17,74 @@ import { Loading } from '@components/ui/loading';
 import { Error } from '@components/ui/error';
 import { ViewParentTweet } from '@components/view/view-parent-tweet';
 import type { ReactElement, ReactNode } from 'react';
+import type { GetServerSideProps } from 'next';
 
-export default function TweetId(): JSX.Element {
+type TweetPreview = {
+  text: string | null;
+  authorName: string;
+  authorUsername: string;
+  image: string | null;
+};
+
+/**
+ * Fetched on the server so the page ships real <title> and og: tags in its
+ * first response. Social crawlers (WhatsApp, Facebook, LinkedIn, Slack) never
+ * run JavaScript, so without this a shared link previews as an empty shell.
+ */
+export const getServerSideProps: GetServerSideProps<{
+  preview: TweetPreview | null;
+}> = async ({ params, res }) => {
+  // let search engines and link previews cache briefly, cheap for repeat hits
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=600'
+  );
+
+  const id = typeof params?.id === 'string' ? params.id : null;
+
+  if (!id) return { props: { preview: null } };
+
+  try {
+    // imported lazily so the client bundle never pulls in firebase-admin
+    const { adminDb, isAdminConfigured } = await import('@lib/firebase/admin');
+
+    if (!isAdminConfigured()) return { props: { preview: null } };
+
+    const snapshot = await adminDb().doc(`tweets/${id}`).get();
+
+    if (!snapshot.exists) return { props: { preview: null } };
+
+    const data = snapshot.data() as {
+      text?: string | null;
+      createdBy?: string;
+      images?: { src: string }[] | null;
+    };
+
+    const author = (
+      await adminDb().doc(`users/${data.createdBy ?? ''}`).get()
+    ).data() as { name?: string; username?: string } | undefined;
+
+    return {
+      props: {
+        preview: {
+          text: data.text ?? null,
+          authorName: author?.name ?? 'Someone',
+          authorUsername: author?.username ?? 'unknown',
+          image: data.images?.[0]?.src ?? null
+        }
+      }
+    };
+  } catch {
+    // never let a metadata lookup take the page down
+    return { props: { preview: null } };
+  }
+};
+
+export default function TweetId({
+  preview
+}: {
+  preview: TweetPreview | null;
+}): JSX.Element {
   const {
     query: { id },
     back
@@ -53,6 +119,17 @@ export default function TweetId(): JSX.Element {
 
   return (
     <MainContainer className='!pb-[1280px]'>
+      {/* Rendered on the server from `preview`, so crawlers get real metadata
+          immediately rather than waiting on a client-side Firestore read. */}
+      {preview && (
+        <SEO
+          title={`${preview.authorName} on The Alternative: "${
+            preview.text ?? ''
+          }" / The Alternative`}
+          description={preview.text ?? `A post by @${preview.authorUsername}`}
+          image={preview.image ?? undefined}
+        />
+      )}
       <MainHeader
         useActionButton
         title={parentId ? 'Thread' : 'Post'}
@@ -63,12 +140,12 @@ export default function TweetId(): JSX.Element {
           <Loading className='mt-5' />
         ) : !tweetData ? (
           <>
-            <SEO title='Post not found / The Alternative' />
+            {!preview && <SEO title='Post not found / The Alternative' />}
             <Error message='Post not found' />
           </>
         ) : (
           <>
-            {pageTitle && <SEO title={pageTitle} />}
+            {!preview && pageTitle && <SEO title={pageTitle} />}
             {parentId && (
               <ViewParentTweet
                 parentId={parentId}
@@ -94,9 +171,9 @@ export default function TweetId(): JSX.Element {
 }
 
 TweetId.getLayout = (page: ReactElement): ReactNode => (
-  <ProtectedLayout>
+  <PublicLayout>
     <MainLayout>
       <HomeLayout>{page}</HomeLayout>
     </MainLayout>
-  </ProtectedLayout>
+  </PublicLayout>
 );

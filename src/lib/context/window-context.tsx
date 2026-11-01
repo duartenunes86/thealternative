@@ -19,10 +19,13 @@ type WindowContextProviderProps = {
 export function WindowContextProvider({
   children
 }: WindowContextProviderProps): JSX.Element {
-  const [windowSize, setWindowSize] = useState<WindowSize>({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
+  // Public pages are server-rendered now, where `window` does not exist.
+  // Start from a desktop-ish guess on the server and correct it on mount.
+  const [windowSize, setWindowSize] = useState<WindowSize>(() =>
+    typeof window === 'undefined'
+      ? { width: 1024, height: 768 }
+      : { width: window.innerWidth, height: window.innerHeight }
+  );
 
   useEffect(() => {
     const handleResize = (): void =>
@@ -30,6 +33,8 @@ export function WindowContextProvider({
         width: window.innerWidth,
         height: window.innerHeight
       });
+
+    handleResize();
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

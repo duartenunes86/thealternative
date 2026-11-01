@@ -17,6 +17,15 @@ export function ProtectedLayout({ children }: LayoutProps): JSX.Element {
   return <>{children}</>;
 }
 
+/**
+ * For pages anyone may view, signed in or not — profiles and individual
+ * posts. These are the pages search engines index, so they must never
+ * redirect a signed-out visitor away.
+ */
+export function PublicLayout({ children }: LayoutProps): JSX.Element {
+  return <>{children}</>;
+}
+
 export function HomeLayout({ children }: LayoutProps): JSX.Element {
   return (
     <>
