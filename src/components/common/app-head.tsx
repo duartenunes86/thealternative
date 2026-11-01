@@ -4,8 +4,8 @@ export function AppHead(): JSX.Element {
   return (
     <Head>
       <title>The Alternative</title>
-      <meta name='og:title' content='The Alternative' />
-      <meta name='og:description' content='Your social network. Join The Alternative at thealternative.social' />
+      <meta property='og:title' content='The Alternative' />
+      <meta property='og:description' content='Your social network. Join The Alternative at thealternative.social' />
       <meta property='og:image' content='https://thealternative.social/home.png' />
       <meta name='twitter:card' content='summary_large_image' />
       <meta name='twitter:image' content='https://thealternative.social/home.png' />

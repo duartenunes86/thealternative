@@ -115,16 +115,6 @@ export default function UserTweets({
 
   return (
     <section>
-      {preview && (
-        <SEO
-          title={`${preview.name} (@${preview.username}) / The Alternative`}
-          description={
-            preview.bio ??
-            `${preview.name} (@${preview.username}) on The Alternative.`
-          }
-          image={preview.photoURL ?? undefined}
-        />
-      )}
       {ownerLoading || peopleLoading ? (
         <Loading className='mt-5' />
       ) : !mergedTweets ? (
@@ -146,14 +136,34 @@ export default function UserTweets({
   );
 }
 
-UserTweets.getLayout = (page: ReactElement): ReactNode => (
-  <PublicLayout>
-    <MainLayout>
-      <UserLayout>
-        <UserDataLayout>
-          <UserHomeLayout>{page}</UserHomeLayout>
-        </UserDataLayout>
-      </UserLayout>
-    </MainLayout>
-  </PublicLayout>
-);
+/**
+ * The SEO tags are rendered here rather than inside the page, because
+ * UserHomeLayout shows a spinner instead of its children until the client
+ * side Firestore read resolves — which on the server is never, so anything
+ * rendered by the page itself is invisible to crawlers.
+ */
+UserTweets.getLayout = (page: ReactElement): ReactNode => {
+  const { preview } = (page.props ?? {}) as { preview?: ProfilePreview | null };
+
+  return (
+    <PublicLayout>
+      {preview && (
+        <SEO
+          title={`${preview.name} (@${preview.username}) / The Alternative`}
+          description={
+            preview.bio ??
+            `${preview.name} (@${preview.username}) on The Alternative.`
+          }
+          image={preview.photoURL ?? undefined}
+        />
+      )}
+      <MainLayout>
+        <UserLayout>
+          <UserDataLayout>
+            <UserHomeLayout>{page}</UserHomeLayout>
+          </UserDataLayout>
+        </UserLayout>
+      </MainLayout>
+    </PublicLayout>
+  );
+};
