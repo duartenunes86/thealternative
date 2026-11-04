@@ -5,6 +5,7 @@ import { useModal } from '@lib/hooks/useModal';
 import { Modal } from '@components/modal/modal';
 import { Input } from '@components/input/input';
 import { CustomIcon } from '@components/ui/custom-icon';
+import { HeroIcon } from '@components/ui/hero-icon';
 import { Button } from '@components/ui/button';
 import { SidebarLink } from './sidebar-link';
 import { MoreSettings } from './more-settings';
@@ -99,7 +100,7 @@ export function Sidebar(): JSX.Element {
       >
         <section className='flex flex-col justify-center gap-2 xs:items-center xl:items-stretch'>
           <h1 className='hidden xs:flex'>
-            <Link href='/home'>
+            <Link href={user ? '/home' : '/'}>
               <a
                 className='custom-button main-tab text-accent-blue transition hover:bg-light-primary/10 
                            focus-visible:bg-accent-blue/10 focus-visible:!ring-accent-blue/80
@@ -133,8 +134,13 @@ export function Sidebar(): JSX.Element {
                            active:brightness-75 xs:static xs:translate-y-0 xl:w-11/12'
               >
                 <span className='hidden xl:block'>Log in</span>
+                {/* narrow screens get a sign-in icon — showing the site logo
+                    here read as decoration rather than a way to log in */}
                 <span className='block xl:hidden'>
-                  <CustomIcon className='h-6 w-6' iconName='TwitterIcon' />
+                  <HeroIcon
+                    className='h-6 w-6'
+                    iconName='ArrowRightOnRectangleIcon'
+                  />
                 </span>
               </a>
             </Link>
