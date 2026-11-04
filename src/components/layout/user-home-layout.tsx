@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { toast } from 'react-hot-toast';
+import { openConversation } from '@lib/firebase/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@lib/context/auth-context';
 import { useUser } from '@lib/context/user-context';
@@ -21,9 +24,12 @@ export function UserHomeLayout({ children }: LayoutProps): JSX.Element {
   const { user, isAdmin } = useAuth();
   const { user: userData, loading } = useUser();
 
+  const router = useRouter();
   const {
     query: { id }
-  } = useRouter();
+  } = router;
+
+  const [opening, setOpening] = useState(false);
 
   const coverData = userData?.coverPhotoURL
     ? { src: userData.coverPhotoURL, alt: userData.name }
@@ -36,6 +42,18 @@ export function UserHomeLayout({ children }: LayoutProps): JSX.Element {
   const { id: userId } = user ?? {};
 
   const isOwner = userData?.id === userId;
+
+  const handleMessage = async (): Promise<void> => {
+    if (!userId || !userData || opening) return;
+    setOpening(true);
+    try {
+      const conversationId = await openConversation(userId, userData.id);
+      await router.push(`/messages/${conversationId}`);
+    } catch {
+      toast.error('Could not open the conversation');
+      setOpening(false);
+    }
+  };
 
   return (
     <>
@@ -75,9 +93,11 @@ export function UserHomeLayout({ children }: LayoutProps): JSX.Element {
                   <div className='flex gap-2 self-start'>
                     <UserShare username={userData.username} />
                     <Button
-                      className='dark-bg-tab group relative cursor-not-allowed border border-light-line-reply p-2
+                      className='dark-bg-tab group relative border border-light-line-reply p-2
                                  hover:bg-light-primary/10 active:bg-light-primary/20 dark:border-light-secondary 
                                  dark:hover:bg-dark-primary/10 dark:active:bg-dark-primary/20'
+                      loading={opening}
+                      onClick={handleMessage}
                     >
                       <HeroIcon className='h-5 w-5' iconName='EnvelopeIcon' />
                       <ToolTip tip='Message' />
