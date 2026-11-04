@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import { useAuth } from '@lib/context/auth-context';
 import { useModal } from '@lib/hooks/useModal';
 import { manageFollow } from '@lib/firebase/utils';
@@ -16,6 +17,7 @@ export function FollowButton({
   userTargetUsername
 }: FollowButtonProps): JSX.Element | null {
   const { user } = useAuth();
+  const { push } = useRouter();
   const { open, openModal, closeModal } = useModal();
 
   if (user?.id === userTargetId) return null;
@@ -23,7 +25,9 @@ export function FollowButton({
   const { id: userId, following } = user ?? {};
 
   const handleFollow = (): Promise<void> =>
-    manageFollow('follow', userId as string, userTargetId);
+    userId
+      ? manageFollow('follow', userId, userTargetId)
+      : push('/').then(() => undefined);
 
   const handleUnfollow = async (): Promise<void> => {
     await manageFollow('unfollow', userId as string, userTargetId);

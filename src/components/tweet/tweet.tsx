@@ -146,7 +146,7 @@ export function Tweet(tweet: TweetProps): JSX.Element {
                   <TweetDate tweetLink={tweetLink} createdAt={createdAt} />
                 </div>
                 <div className='px-4'>
-                  {!modal && (
+                  {!modal && user && (
                     <TweetActions
                       isOwner={isOwner}
                       ownerId={ownerId}

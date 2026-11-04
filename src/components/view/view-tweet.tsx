@@ -100,16 +100,18 @@ export function ViewTweet(tweet: ViewTweetProps): JSX.Element {
               </UserTooltip>
             </div>
             <div className='px-4'>
-              <TweetActions
-                viewTweet
-                isOwner={isOwner}
-                ownerId={ownerId}
-                tweetId={tweetId}
-                parentId={parentId}
-                username={username}
-                hasImages={!!images}
-                createdBy={createdBy}
-              />
+              {user && (
+                <TweetActions
+                  viewTweet
+                  isOwner={isOwner}
+                  ownerId={ownerId}
+                  tweetId={tweetId}
+                  parentId={parentId}
+                  username={username}
+                  hasImages={!!images}
+                  createdBy={createdBy}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -152,7 +154,7 @@ export function ViewTweet(tweet: ViewTweetProps): JSX.Element {
             openModal={openModal}
           />
         </div>
-        <Input reply parent={{ id: tweetId, username: username }} />
+        {user && <Input reply parent={{ id: tweetId, username: username }} />}
       </div>
     </motion.article>
   );

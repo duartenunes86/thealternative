@@ -3,6 +3,7 @@ import { doc } from 'firebase/firestore';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDocument } from '@lib/hooks/useDocument';
 import { useUser } from '@lib/context/user-context';
+import { useAuth } from '@lib/context/auth-context';
 import { isPlural } from '@lib/utils';
 import { userStatsCollection } from '@lib/firebase/collections';
 import { UserName } from './user-name';
@@ -21,6 +22,7 @@ export function UserHeader(): JSX.Element {
   } = useRouter();
 
   const { user, loading } = useUser();
+  const { user: viewer } = useAuth();
 
   const userId = user ? user.id : null;
 
@@ -28,7 +30,9 @@ export function UserHeader(): JSX.Element {
     doc(userStatsCollection(userId ?? 'null'), 'stats'),
     {
       allowNull: true,
-      disabled: !userId
+      // users/{id}/stats is private to its owner (see firestore.rules), so
+      // everyone else, signed in or not, uses the public counters instead
+      disabled: !userId || viewer?.id !== userId
     }
   );
 

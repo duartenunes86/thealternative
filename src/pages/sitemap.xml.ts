@@ -15,6 +15,14 @@ function escapeXml(value: string): string {
     .replace(/'/g, '&apos;');
 }
 
+/** Test and throwaway accounts that should never be sent to search engines. */
+const JUNK_USERNAMES = new Set(['test', 'search', 'getout']);
+
+function isJunkUsername(username: string): boolean {
+  const name = username.toLowerCase();
+  return JUNK_USERNAMES.has(name) || /^test[\d_]*$/.test(name);
+}
+
 type Entry = { loc: string; lastmod?: string; priority: string };
 
 function renderSitemap(entries: Entry[]): string {
@@ -54,13 +62,23 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
 
       const users = await db.collection('users').limit(MAX_PROFILES).get();
 
+      // Only profiles worth a search result: no test/junk accounts and no
+      // empty profiles. Their posts are left out too.
+      const hidden = new Set<string>();
+
       users.docs.forEach((doc) => {
-        const { username } = doc.data() as { username?: string };
-        if (username)
-          entries.push({
-            loc: `${siteURL}/user/${username}`,
-            priority: '0.8'
-          });
+        const { username, totalTweets } = doc.data() as {
+          username?: string;
+          totalTweets?: number;
+        };
+        if (!username || isJunkUsername(username) || !(totalTweets ?? 0)) {
+          hidden.add(doc.id);
+          return;
+        }
+        entries.push({
+          loc: `${siteURL}/user/${username}`,
+          priority: '0.8'
+        });
       });
 
       // newest posts first — those are the ones worth crawling soonest
@@ -71,9 +89,12 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
         .get();
 
       posts.docs.forEach((doc) => {
-        const { createdAt } = doc.data() as {
+        const { createdAt, createdBy } = doc.data() as {
           createdAt?: { toDate?: () => Date };
+          createdBy?: string;
         };
+
+        if (!createdBy || hidden.has(createdBy)) return;
 
         entries.push({
           loc: `${siteURL}/tweet/${doc.id}`,
