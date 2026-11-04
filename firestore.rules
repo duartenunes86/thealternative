@@ -42,12 +42,26 @@ service cloud.firestore {
       allow delete: if isAuthorized(resource.data.createdBy);
     }
 
+    // Following someone writes to *their* profile (the followers list), which
+    // the owner-only rule below would reject — so following was failing
+    // entirely. Allow exactly that write: only `followers` (and updatedAt)
+    // may change, and the only id added or removed is the caller's own.
+    function onlyOwnFollowChanged() {
+      let before = resource.data.get('followers', []).toSet();
+      let after = request.resource.data.get('followers', []).toSet();
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['followers', 'updatedAt'])
+             && after.difference(before).hasOnly([request.auth.uid])
+             && before.difference(after).hasOnly([request.auth.uid]);
+    }
+
     // Public profile. The document holds no contact details — email lives in
     // Firebase Auth, not here — so this exposes only what a profile page shows.
     match /users/{userId} {
       allow read: if true;
       allow create: if request.auth.uid == userId;
-      allow update: if isAuthorized(userId);
+      allow update: if isAuthorized(userId)
+                       || (request.auth != null && onlyOwnFollowChanged());
       allow delete: if isAdmin();
     }
 
