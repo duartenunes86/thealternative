@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import cn from 'clsx';
 import { manageRetweet, manageLike } from '@lib/firebase/utils';
 import { ViewTweetStats } from '@components/view/view-tweet-stats';
@@ -31,6 +32,11 @@ export function TweetStats({
   userReplies: totalReplies,
   openModal
 }: TweetStatsProps): JSX.Element {
+  const { push } = useRouter();
+
+  // signed-out visitors can read posts; acting on them needs an account
+  const requireLogin = (): void => void push('/');
+
   const totalLikes = userLikes.length;
   const totalTweets = userRetweets.length;
 
@@ -99,7 +105,7 @@ export function TweetStats({
           stats={currentReplies}
           iconName='ChatBubbleOvalLeftIcon'
           viewTweet={viewTweet}
-          onClick={openModal}
+          onClick={userId ? openModal : requireLogin}
           disabled={reply}
         />
         <TweetOption
@@ -114,11 +120,15 @@ export function TweetStats({
           stats={currentTweets}
           iconName='ArrowPathRoundedSquareIcon'
           viewTweet={viewTweet}
-          onClick={manageRetweet(
-            tweetIsRetweeted ? 'unretweet' : 'retweet',
-            userId,
-            tweetId
-          )}
+          onClick={
+            userId
+              ? manageRetweet(
+                  tweetIsRetweeted ? 'unretweet' : 'retweet',
+                  userId,
+                  tweetId
+                )
+              : requireLogin
+          }
         />
         <TweetOption
           className={cn(
@@ -132,11 +142,11 @@ export function TweetStats({
           stats={currentLikes}
           iconName='HeartIcon'
           viewTweet={viewTweet}
-          onClick={manageLike(
-            tweetIsLiked ? 'unlike' : 'like',
-            userId,
-            tweetId
-          )}
+          onClick={
+            userId
+              ? manageLike(tweetIsLiked ? 'unlike' : 'like', userId, tweetId)
+              : requireLogin
+          }
         />
         <TweetShare userId={userId} tweetId={tweetId} viewTweet={viewTweet} />
         {isOwner && (

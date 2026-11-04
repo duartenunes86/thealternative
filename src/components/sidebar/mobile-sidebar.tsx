@@ -5,7 +5,6 @@ import { Modal } from '@components/modal/modal';
 import { MobileSidebarModal } from '@components/modal/mobile-sidebar-modal';
 import { UserAvatar } from '@components/user/user-avatar';
 import type { Variants } from 'framer-motion';
-import type { User } from '@lib/types/user';
 
 const variant: Variants = {
   initial: { x: '-100%', opacity: 0.8 },
@@ -17,12 +16,15 @@ const variant: Variants = {
   exit: { x: '-100%', opacity: 0.8, transition: { duration: 0.4 } }
 };
 
-export function MobileSidebar(): JSX.Element {
+export function MobileSidebar(): JSX.Element | null {
   const { user } = useAuth();
 
-  const { photoURL, name } = user as User;
-
   const { open, openModal, closeModal } = useModal();
+
+  // signed-out visitors (public profiles and posts) have no account menu
+  if (!user) return null;
+
+  const { photoURL, name } = user;
 
   return (
     <>
@@ -33,7 +35,7 @@ export function MobileSidebar(): JSX.Element {
         open={open}
         closeModal={closeModal}
       >
-        <MobileSidebarModal {...(user as User)} closeModal={closeModal} />
+        <MobileSidebarModal {...user} closeModal={closeModal} />
       </Modal>
       <Button className='accent-tab p-0 xs:hidden' onClick={openModal}>
         <UserAvatar src={photoURL} alt={name} size={30} />
