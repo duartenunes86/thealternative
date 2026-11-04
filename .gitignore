@@ -46,3 +46,8 @@ next-env.d.ts
 # Cloud Functions params (contains secrets)
 functions/.env
 functions/.env.*
+
+# Firebase emulator / CLI debug output
+firebase-debug.log
+firestore-debug.log
+*-debug.log
