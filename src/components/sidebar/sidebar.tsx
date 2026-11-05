@@ -27,6 +27,11 @@ const navLinks: Readonly<NavLink[]> = [
     iconName: 'HomeIcon'
   },
   {
+    href: '/search',
+    linkName: 'Search',
+    iconName: 'MagnifyingGlassIcon'
+  },
+  {
     href: '/trends',
     linkName: 'Explore',
     iconName: 'HashtagIcon',
@@ -57,6 +62,11 @@ const navLinks: Readonly<NavLink[]> = [
  * else needs an account.
  */
 const publicNavLinks: Readonly<NavLink[]> = [
+  {
+    href: '/search',
+    linkName: 'Search',
+    iconName: 'MagnifyingGlassIcon'
+  },
   {
     href: '/trends',
     linkName: 'Explore',

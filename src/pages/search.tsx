@@ -7,6 +7,7 @@ import { SEO } from '@components/common/seo';
 import { MainHeader } from '@components/home/main-header';
 import { MainContainer } from '@components/home/main-container';
 import { UserAvatar } from '@components/user/user-avatar';
+import { SearchBar } from '@components/aside/search-bar';
 import { StatsEmpty } from '@components/tweet/stats-empty';
 import { Loading } from '@components/ui/loading';
 import { Error as ErrorMessage } from '@components/ui/error';
@@ -74,6 +75,11 @@ export default function Search(): JSX.Element {
         }
       />
       <MainHeader useActionButton title='Search' action={back} />
+      {/* the sidebar search box is hidden below 1024px, so the page carries
+          its own — otherwise search is unreachable on a phone */}
+      <div className='px-4 py-3 lg:hidden'>
+        <SearchBar />
+      </div>
       <section className='mt-0.5'>
         {loading ? (
           <Loading className='mt-5' />
