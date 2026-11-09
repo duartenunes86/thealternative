@@ -9,6 +9,7 @@ import { SEO } from '@components/common/seo';
 import { MainContainer } from '@components/home/main-container';
 import { Input } from '@components/input/input';
 import { UpdateUsername } from '@components/home/update-username';
+import { EmailDigestPrompt } from '@components/home/email-digest-prompt';
 import { MainHeader } from '@components/home/main-header';
 import { Tweet } from '@components/tweet/tweet';
 import { Loading } from '@components/ui/loading';
@@ -34,6 +35,7 @@ export default function Home(): JSX.Element {
       >
         <UpdateUsername />
       </MainHeader>
+      <EmailDigestPrompt />
       {!isMobile && <Input />}
       <section className='mt-0.5 xs:mt-0'>
         {loading ? (
