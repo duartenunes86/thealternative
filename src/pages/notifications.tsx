@@ -1,4 +1,5 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import cn from 'clsx';
 import { AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { orderBy, query, limit } from 'firebase/firestore';
@@ -23,7 +24,7 @@ import { MainContainer } from '@components/home/main-container';
 import { Modal } from '@components/modal/modal';
 import { ActionModal } from '@components/modal/action-modal';
 import { NotificationCard } from '@components/notification/notification-card';
-import { EmailDigestSettings } from '@components/notification/email-digest-settings';
+import { EmailSettings } from '@components/notification/email-settings';
 import { StatsEmpty } from '@components/tweet/stats-empty';
 import { Button } from '@components/ui/button';
 import { ToolTip } from '@components/ui/tooltip';
@@ -31,11 +32,23 @@ import { HeroIcon } from '@components/ui/hero-icon';
 import { Loading } from '@components/ui/loading';
 import type { ReactElement, ReactNode } from 'react';
 import type { User } from '@lib/types/user';
+import type { NotificationType } from '@lib/types/notification';
+
+type Tab = 'all' | NotificationType;
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'reply', label: 'Replies' },
+  { value: 'follow', label: 'Follows' },
+  { value: 'like', label: 'Likes' }
+];
 
 export default function Notifications(): JSX.Element {
   const { user } = useAuth();
 
   const { open, openModal, closeModal } = useModal();
+
+  const [tab, setTab] = useState<Tab>('all');
 
   const userId = user?.id as string;
 
@@ -104,6 +117,20 @@ export default function Notifications(): JSX.Element {
 
   const loading = notificationsLoading || sendersLoading;
 
+  const shown = useMemo(
+    () => (notifications ?? []).filter(({ type }) => tab === 'all' || type === tab),
+    [notifications, tab]
+  );
+
+  const counts = useMemo(() => {
+    const c: Record<Tab, number> = { all: 0, reply: 0, follow: 0, like: 0 };
+    (notifications ?? []).forEach(({ type }) => {
+      c.all += 1;
+      c[type] += 1;
+    });
+    return c;
+  }, [notifications]);
+
   return (
     <MainContainer>
       <SEO title='Notifications / The Alternative' />
@@ -160,22 +187,53 @@ export default function Notifications(): JSX.Element {
         </div>
       </MainHeader>
       {userId && (
-        <EmailDigestSettings
+        <EmailSettings
           userId={userId}
-          current={user?.emailDigest ?? 'off'}
+          digest={user?.emailDigest ?? 'off'}
+          activity={user?.emailActivity ?? 'on'}
         />
       )}
+      <nav
+        className='flex border-b border-light-border dark:border-dark-border'
+        aria-label='Filter notifications'
+      >
+        {TABS.map(({ value, label }) => (
+          <button
+            type='button'
+            key={value}
+            aria-pressed={tab === value}
+            className={cn(
+              'hover-animation flex-1 py-3 text-sm font-medium hover:bg-light-primary/10 dark:hover:bg-dark-primary/10',
+              tab === value
+                ? 'border-b-2 border-main-accent font-bold'
+                : 'text-light-secondary dark:text-dark-secondary'
+            )}
+            onClick={(): void => setTab(value)}
+          >
+            {label}
+            {counts[value] > 0 && (
+              <span className='ml-1 text-xs text-light-secondary dark:text-dark-secondary'>
+                {counts[value]}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
       <section className='mt-0.5'>
         {loading ? (
           <Loading className='mt-5' />
-        ) : !notifications?.length ? (
+        ) : !shown.length ? (
           <StatsEmpty
             title='Nothing to see here — yet'
-            description='When someone likes or replies to your posts, or follows you, it’ll show up here.'
+            description={
+              tab === 'all'
+                ? 'When someone likes or replies to your posts, or follows you, it’ll show up here.'
+                : 'Nothing in this tab yet.'
+            }
           />
         ) : (
           <AnimatePresence mode='popLayout'>
-            {notifications.map((notification) => (
+            {shown.map((notification) => (
               <NotificationCard
                 notification={notification}
                 user={sendersById.get(notification.fromUserId) ?? null}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useAuth } from '@lib/context/auth-context';
 import { useWindow } from '@lib/context/window-context';
 import { useModal } from '@lib/hooks/useModal';
+import { useConversations } from '@lib/hooks/useConversations';
 import { Modal } from '@components/modal/modal';
 import { Input } from '@components/input/input';
 import { CustomIcon } from '@components/ui/custom-icon';
@@ -18,6 +19,7 @@ export type NavLink = {
   iconName: IconName;
   disabled?: boolean;
   canBeHidden?: boolean;
+  badge?: number;
 };
 
 const navLinks: Readonly<NavLink[]> = [
@@ -41,6 +43,11 @@ const navLinks: Readonly<NavLink[]> = [
     href: '/notifications',
     linkName: 'Notifications',
     iconName: 'BellIcon'
+  },
+  {
+    href: '/messages',
+    linkName: 'Messages',
+    iconName: 'EnvelopeIcon'
   },
   {
     href: '/bookmarks',
@@ -89,6 +96,8 @@ export function Sidebar(): JSX.Element {
 
   const username = user?.username as string;
 
+  const { unreadTotal } = useConversations(user?.id ?? null);
+
   return (
     <header
       id='sidebar'
@@ -124,7 +133,11 @@ export function Sidebar(): JSX.Element {
             {/* Signed-out visitors land here from search, so they get the
                 browsable pages only — the rest needs an account. */}
             {(user ? navLinks : publicNavLinks).map(({ ...linkData }) => (
-              <SidebarLink {...linkData} key={linkData.href} />
+              <SidebarLink
+                {...linkData}
+                badge={linkData.href === '/messages' ? unreadTotal : undefined}
+                key={linkData.href}
+              />
             ))}
             {user && (
               <SidebarLink
