@@ -1,5 +1,6 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminAuth, adminDb, isAdminConfigured } from '@lib/firebase/admin';
+import { postalAddress } from '@lib/server/mail';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 /**
@@ -13,6 +14,22 @@ import type { NextApiRequest, NextApiResponse } from 'next';
  * The client IP comes from X-TA-Client-IP, which the nginx in front of the
  * app sets to $remote_addr (Traefik in between rewrites X-Forwarded-For).
  */
+
+/**
+ * Countries whose law lets a service email its own users a round-up by
+ * default, with an unsubscribe link (opt-out) rather than asking first:
+ *   US — CAN-SPAM (needs unsubscribe link + postal address in every email)
+ *   HK — Unsolicited Electronic Messages Ordinance (unsubscribe facility)
+ * Everywhere else (UK, EU, Canada, Australia, Japan, Korea, ...) needs a
+ * clear yes, so those users keep the home-page prompt.
+ *
+ * Caveat: the sender is UK-established, and it is arguable that UK PECR
+ * covers its marketing to any recipient. Empty this list to go back to
+ * opt-in everywhere.
+ */
+const OPT_OUT_COUNTRIES = new Set(['US', 'HK']);
+
+const DEFAULT_OPT_OUT_FREQUENCY = 'weekly';
 
 function clientIp(req: NextApiRequest): string | null {
   const header = req.headers['x-ta-client-ip'];
@@ -89,5 +106,20 @@ export default async function handler(
 
   await ref.set({ country, recordedAt: FieldValue.serverTimestamp() });
 
-  res.status(200).json({ saved: true, country });
+  // US law needs a postal address in each email, so only default people in
+  // when the footer will carry one
+  let digestDefaulted = false;
+
+  if (OPT_OUT_COUNTRIES.has(country) && postalAddress) {
+    const userRef = adminDb().doc(`users/${uid}`);
+    const userSnap = await userRef.get();
+
+    // only people who have never chosen; an explicit 'off' is respected
+    if (userSnap.exists && userSnap.get('emailDigest') === undefined) {
+      await userRef.update({ emailDigest: DEFAULT_OPT_OUT_FREQUENCY });
+      digestDefaulted = true;
+    }
+  }
+
+  res.status(200).json({ saved: true, country, digestDefaulted });
 }

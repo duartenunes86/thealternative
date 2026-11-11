@@ -102,7 +102,7 @@ function renderEmail(
         <a href="${siteURL}/home" style="display:inline-block;background:#1da1f2;color:#fff;padding:10px 20px;border-radius:9999px;text-decoration:none;font-weight:600">Open The Alternative</a>
       </td></tr>
       <tr><td style="padding-top:24px;color:#687684;font-size:12px;line-height:1.5">
-        You asked to receive these round-ups from The Alternative.<br>
+        You get these round-ups because you have an account on The Alternative.<br>
         <a href="${unsubUrl}" style="color:#687684">Unsubscribe from these emails</a>
         ${postalAddress ? `<br><br>${escapeHtml(postalAddress)}` : ''}
       </td></tr>
