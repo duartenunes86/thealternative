@@ -46,7 +46,11 @@ type AuthContext = {
   userBookmarks: Bookmark[] | null;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUpWithEmail: (name: string, email: string, password: string) => Promise<void>;
+  signUpWithEmail: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
 };
 
@@ -90,7 +94,9 @@ export function AuthContextProvider({
         const normalizeName = displayName.replace(/\s/g, '').toLowerCase();
         const randomInt = getRandomInt(1, 10_000);
         randomUsername = `${normalizeName}${randomInt}`;
-        const isUsernameAvailable = await checkUsernameAvailability(randomUsername);
+        const isUsernameAvailable = await checkUsernameAvailability(
+          randomUsername
+        );
         if (isUsernameAvailable) available = true;
       }
 
@@ -153,6 +159,32 @@ export function AuthContextProvider({
     const unsubscribe = onAuthStateChanged(auth, handleUserAuth);
     return unsubscribe;
   }, [manageUser]);
+
+  // record the sign-in country once per user (server ignores repeats);
+  // the session flag just avoids a request on every page load
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const flag = `geo-recorded-${user.id}`;
+
+    try {
+      if (sessionStorage.getItem(flag)) return;
+      sessionStorage.setItem(flag, '1');
+    } catch {
+      // storage blocked — fine, the server dedupes
+    }
+
+    void auth.currentUser
+      ?.getIdToken()
+      .then((idToken) =>
+        fetch('/api/geo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        })
+      )
+      .catch(() => undefined);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
