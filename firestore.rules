@@ -18,12 +18,32 @@ service cloud.firestore {
       return (images is list && images.size() <= 4) || images == null;
     }
 
+    function onlyOwnIdChanged(field) {
+      let before = resource.data.get(field, []).toSet();
+      let after = request.resource.data.get(field, []).toSet();
+      return after.difference(before).hasOnly([request.auth.uid])
+             && before.difference(after).hasOnly([request.auth.uid]);
+    }
+
+    function repliesMovedByOne() {
+      let before = resource.data.get('userReplies', 0);
+      let after = request.resource.data.get('userReplies', 0);
+      return after is int && after >= 0
+             && (after == before || after == before + 1 || after == before - 1);
+    }
+
     // Fields any signed-in user may change on someone else's tweet: likes,
     // retweets and the reply counter. Everything else (text, images,
     // createdBy, ...) stays owner/admin only.
+    // ...and only in the way the app itself does it: add or remove the caller's own
+    // uid from userLikes / userRetweets, and move the reply counter by one. Without
+    // this, any signed-in user could wipe or forge other people's likes and retweets.
     function onlySocialFieldsChanged() {
       return request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['userLikes', 'userRetweets', 'userReplies', 'updatedAt']);
+               .hasOnly(['userLikes', 'userRetweets', 'userReplies', 'updatedAt'])
+             && onlyOwnIdChanged('userLikes')
+             && onlyOwnIdChanged('userRetweets')
+             && repliesMovedByOne();
     }
 
     match /tweets/{tweetId} {
