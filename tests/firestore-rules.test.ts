@@ -174,3 +174,47 @@ describe('conversations', () => {
     await assertSucceeds(deleteDoc(doc(as(A), 'conversations', AB, 'messages', 'm2')));
   });
 });
+
+describe('likes, retweets and replies on someone else’s tweet', () => {
+  const T = 'tweet1';
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'tweets', T), {
+        text: 'hi', images: null, createdBy: B, parent: null,
+        userLikes: [C], userRetweets: [C], userReplies: 2,
+        createdAt: new Date(), updatedAt: null
+      });
+    });
+  });
+
+  test('can like/unlike and retweet/un-retweet as yourself', async () => {
+    const db = as(A);
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userLikes: arrayUnion(A), updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userLikes: arrayRemove(A) }));
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userRetweets: arrayUnion(A) }));
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userRetweets: arrayRemove(A) }));
+  });
+
+  test('cannot add or remove other people’s likes or retweets', async () => {
+    const db = as(A);
+    await assertFails(updateDoc(doc(db, 'tweets', T), { userLikes: arrayRemove(C) }));
+    await assertFails(updateDoc(doc(db, 'tweets', T), { userLikes: arrayUnion('mallory') }));
+    await assertFails(updateDoc(doc(db, 'tweets', T), { userRetweets: [] }));
+  });
+
+  test('reply counter moves by one only', async () => {
+    const db = as(A);
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userReplies: increment(1) }));
+    await assertSucceeds(updateDoc(doc(db, 'tweets', T), { userReplies: increment(-1) }));
+    await assertFails(updateDoc(doc(db, 'tweets', T), { userReplies: 500 }));
+    await assertFails(updateDoc(doc(db, 'tweets', T), { userReplies: -1 }));
+  });
+
+  test('cannot edit the text of someone else’s tweet', async () => {
+    await assertFails(updateDoc(doc(as(A), 'tweets', T), { text: 'hacked' }));
+  });
+
+  test('owner can still edit their own tweet', async () => {
+    await assertSucceeds(updateDoc(doc(as(B), 'tweets', T), { userLikes: [] }));
+  });
+});
