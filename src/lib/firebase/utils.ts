@@ -480,6 +480,25 @@ export async function updateEmailActivity(
   });
 }
 
+// ---------- contact email (private, owner-only) ----------
+
+// Some sign-ins (e.g. certain Google accounts) leave Auth without an email
+// address, so the email jobs have nowhere to send. The address the user gives
+// us lives in a private sub-doc, never on the public profile.
+function contactDoc(userId: string) {
+  return doc(db, 'users', userId, 'private', 'contact');
+}
+
+export async function getContactEmail(userId: string): Promise<string | null> {
+  const snapshot = await getDoc(contactDoc(userId));
+  const email = snapshot.get('email') as unknown;
+  return typeof email === 'string' && email ? email : null;
+}
+
+export async function saveContactEmail(userId: string, email: string): Promise<void> {
+  await setDoc(contactDoc(userId), { email, updatedAt: serverTimestamp() }, { merge: true });
+}
+
 // ---------- direct messages ----------
 
 /**
