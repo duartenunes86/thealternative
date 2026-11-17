@@ -1,3 +1,4 @@
+import { resolveUserEmail } from '@lib/server/user-email';
 import { adminAuth, adminDb, isAdminConfigured } from '@lib/firebase/admin';
 import {
   siteURL,
@@ -249,7 +250,10 @@ export default async function handler(
     let email: string | undefined;
 
     try {
-      email = (await adminAuth().getUser(userId)).email;
+      email = resolveUserEmail(
+        await adminAuth().getUser(userId),
+        doc.data().email
+      );
     } catch {
       continue; // deleted from Auth but left in Firestore
     }

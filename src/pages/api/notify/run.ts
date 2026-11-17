@@ -1,3 +1,4 @@
+import { resolveUserEmail } from '@lib/server/user-email';
 import { Timestamp } from 'firebase-admin/firestore';
 import { adminAuth, adminDb, isAdminConfigured } from '@lib/firebase/admin';
 import { createMailer, emailConfigured, schedulerAuthorized, unsubscribeUrl } from '@lib/server/mail';
@@ -116,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let address: string | undefined;
     try {
-      address = (await auth.getUser(uid)).email;
+      address = resolveUserEmail(await auth.getUser(uid), data.email);
     } catch {
       continue; // deleted from Auth but left in Firestore
     }
