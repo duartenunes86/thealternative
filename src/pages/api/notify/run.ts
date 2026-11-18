@@ -1,3 +1,4 @@
+import { emailForUser } from '@lib/server/user-email';
 import { Timestamp } from 'firebase-admin/firestore';
 import { adminAuth, adminDb, isAdminConfigured } from '@lib/firebase/admin';
 import { createMailer, emailConfigured, schedulerAuthorized, unsubscribeUrl } from '@lib/server/mail';
@@ -114,12 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const email = buildActivityEmail(items, unsub);
     if (!email) continue;
 
-    let address: string | undefined;
-    try {
-      address = (await auth.getUser(uid)).email;
-    } catch {
-      continue; // deleted from Auth but left in Firestore
-    }
+    const address = await emailForUser(auth, db, uid);
     if (!address) continue;
     if (only && address.toLowerCase() !== only) continue;
 
