@@ -37,6 +37,21 @@ export function tokenIsValid(userId: string, kind: EmailKind, token: string): bo
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
+/** Signed link that moves a weekly subscriber to the daily round-up. */
+export function dailyToken(userId: string): string {
+  return createHmac('sha256', process.env.DIGEST_SECRET ?? '').update(`${userId}:daily`).digest('hex').slice(0, 32);
+}
+
+export function dailyUrl(userId: string): string {
+  return `${siteURL}/api/digest/daily?uid=${encodeURIComponent(userId)}&token=${dailyToken(userId)}`;
+}
+
+export function dailyTokenIsValid(userId: string, token: string): boolean {
+  const expected = Buffer.from(dailyToken(userId));
+  const given = Buffer.from(token);
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
 export function emailConfigured(): boolean {
   return Boolean(process.env.EMAIL_API && process.env.EMAIL_API_PASSWORD);
 }

@@ -57,3 +57,14 @@ test('unsubscribe tokens are per kind, and old digest links keep working', () =>
   expect(tokenIsValid('u1', 'activity', digest)).toBe(false);
   expect(tokenIsValid('u2', 'activity', activity)).toBe(false);
 });
+
+test('daily-upgrade link token is per user and not an unsubscribe token', () => {
+  process.env.DIGEST_SECRET = 'test-secret';
+  const { dailyToken, dailyTokenIsValid, dailyUrl } = require('@lib/server/mail');
+  const t = dailyToken('u1');
+  expect(dailyTokenIsValid('u1', t)).toBe(true);
+  expect(dailyTokenIsValid('u2', t)).toBe(false);
+  expect(dailyTokenIsValid('u1', unsubscribeToken('u1', 'digest'))).toBe(false);
+  expect(tokenIsValid('u1', 'digest', t)).toBe(false);
+  expect(dailyUrl('u1')).toContain('/api/digest/daily?uid=u1&token=');
+});
