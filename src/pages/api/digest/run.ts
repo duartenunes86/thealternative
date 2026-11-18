@@ -5,6 +5,7 @@ import {
   postalAddress,
   escapeHtml,
   unsubscribeUrl as makeUnsubscribeUrl,
+  dailyUrl,
   createMailer,
   emailConfigured,
   schedulerAuthorized
@@ -42,7 +43,8 @@ function renderEmail(
   posts: PostForEmail[],
   members: MemberForEmail[],
   frequency: string,
-  unsubUrl: string
+  unsubUrl: string,
+  upgradeUrl: string | null = null
 ): { subject: string; html: string; text: string } {
   const period = frequency === 'daily' ? 'today' : 'this week';
 
@@ -102,6 +104,9 @@ function renderEmail(
       <tr><td style="padding-top:20px">
         <a href="${siteURL}/home" style="display:inline-block;background:#1da1f2;color:#fff;padding:10px 20px;border-radius:9999px;text-decoration:none;font-weight:600">Open The Alternative</a>
       </td></tr>
+      ${upgradeUrl ? `<tr><td style="padding-top:20px;color:#14171a;font-size:14px">
+        Want these every day? <a href="${upgradeUrl}" style="color:#1da1f2;text-decoration:none;font-weight:600">Get the daily round-up →</a>
+      </td></tr>` : ''}
       <tr><td style="padding-top:24px;color:#687684;font-size:12px;line-height:1.5">
         You get these round-ups because you have an account on The Alternative.<br>
         <a href="${unsubUrl}" style="color:#687684">Unsubscribe from these emails</a>
@@ -119,6 +124,7 @@ function renderEmail(
     ...(members.length
       ? ['', 'New members:', ...members.map(({ name, username }) => `${name} (@${username}) ${siteURL}/user/${username}`)]
       : []),
+    ...(upgradeUrl ? ['', `Want these every day? ${upgradeUrl}`] : []),
     '',
     `Unsubscribe: ${unsubUrl}`,
     ...(postalAddress ? ['', postalAddress] : [])
@@ -254,7 +260,13 @@ export default async function handler(
     if (only && email.toLowerCase() !== only.toLowerCase()) continue;
 
     const unsubUrl = unsubscribeUrl(userId);
-    const { subject, html, text } = renderEmail(theirPosts, theirMembers, frequency, unsubUrl);
+    const { subject, html, text } = renderEmail(
+      theirPosts,
+      theirMembers,
+      frequency,
+      unsubUrl,
+      frequency === 'weekly' ? dailyUrl(userId) : null
+    );
 
     if (dryRun) {
       sent += 1;
