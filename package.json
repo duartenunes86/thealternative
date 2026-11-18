@@ -12,7 +12,6 @@
     "lint": "next lint",
     "test": "jest --watch",
     "test:ci": "jest --ci",
-    "prepare": "husky install",
     "test:rules": "firebase emulators:exec --only firestore --project demo-thealternative \"jest --ci tests/firestore-rules.test.ts\"",
     "test:unit": "jest --ci tests/activity-email.test.ts"
   },
