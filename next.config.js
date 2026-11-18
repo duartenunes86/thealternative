@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // lint runs locally; skipping it here saves ~20s per deploy (type checking still runs)
+  eslint: { ignoreDuringBuilds: true },
   images: {
     unoptimized: true
   },
