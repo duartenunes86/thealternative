@@ -1,6 +1,17 @@
 export function LoginFooter(): JSX.Element {
   return (
     <footer className='hidden flex-col items-center gap-3 p-4 text-center text-sm text-light-secondary dark:text-dark-secondary lg:flex'>
+      <p>
+        Made by{' '}
+        <a
+          href='https://www.saintmichaelwebservices.com'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-accent-blue hover:underline'
+        >
+          Saint Michael Web Services Limited
+        </a>
+      </p>
       <p>© 2026 Saint Michael Web Services Limited</p>
       <p>
         Want a social network like this for £15/month?{' '}

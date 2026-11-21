@@ -214,6 +214,17 @@ export function MobileSidebarModal({
               Log out
             </Button>
           </nav>
+          <p className='px-1.5 pt-2 text-sm text-light-secondary dark:text-dark-secondary'>
+            Made by{' '}
+            <a
+              href='https://www.saintmichaelwebservices.com'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-accent-blue hover:underline'
+            >
+              Saint Michael Web Services Limited
+            </a>
+          </p>
         </div>
       </section>
     </>
